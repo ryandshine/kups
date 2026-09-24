@@ -261,6 +261,9 @@ lembagaRouter.get('/:id', async (req: Request, res: Response) => {
         ku.id,
         ku.nama_kups,
         ku.kelas,
+        COALESCE(ku.produk, '[]'::jsonb) || COALESCE(ku.source_payload->'produk', '[]'::jsonb) as produk,
+        COALESCE(ku.potensi, '[]'::jsonb) || COALESCE(ku.source_payload->'potensi', '[]'::jsonb) as potensi,
+        COALESCE(NULLIF(TRIM(ku.source_payload->>'sk'), ''), NULLIF(TRIM(ku.source_payload->>'surat_keputusan'), '')) as sk_kups,
         ku.source_payload,
         COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai,
         COUNT(p.id) as transaksi_count,
@@ -268,24 +271,25 @@ lembagaRouter.get('/:id', async (req: Request, res: Response) => {
       FROM kups_records ku
       LEFT JOIN kps_production_records p ON (p.kups_detail_id IS NOT NULL AND ku.source_payload->>'detail_id' = p.kups_detail_id)
       WHERE ku.lembaga_id = $1
-      GROUP BY ku.id, ku.nama_kups, ku.kelas, ku.source_payload
+      GROUP BY ku.id, ku.nama_kups, ku.kelas, ku.produk, ku.potensi, ku.source_payload
       ORDER BY total_nilai DESC, ku.nama_kups ASC
     `, [id]);
 
     const kupsList = kupsRes.rows.map((k) => {
       const payload = k.source_payload || {};
+      const skKups = k.sk_kups || payload.sk || payload.surat_keputusan || payload.sk_penetapan || '';
       return {
         id: k.id,
         nama_kups: k.nama_kups,
         kelas: k.kelas,
-        sk_penetapan: payload.sk_penetapan || '',
-        tanggal_penetapan: payload.tanggal_penetapan || '',
+        sk_penetapan: skKups,
+        tanggal_penetapan: payload.tanggal_penetapan || payload.periode_terbentuk || '',
         total_nilai: parseInt(k.total_nilai, 10) || 0,
         transaksi_count: parseInt(k.transaksi_count, 10) || 0,
         komoditas_list: k.komoditas_list || '',
         detail_id: payload.detail_id || null,
-        potensi: Array.isArray(payload.potensi) ? payload.potensi : [],
-        produk: Array.isArray(payload.produk) ? payload.produk : [],
+        potensi: Array.isArray(k.potensi) ? k.potensi : (Array.isArray(payload.potensi) ? payload.potensi : []),
+        produk: Array.isArray(k.produk) ? k.produk : (Array.isArray(payload.produk) ? payload.produk : []),
       };
     });
 

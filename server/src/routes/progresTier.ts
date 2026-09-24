@@ -134,25 +134,40 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
         SELECT 
           ku.id,
           ku.kelas,
-          jsonb_array_length(COALESCE(ku.source_payload->'produk', '[]'::jsonb)) as produk_cnt,
-          jsonb_array_length(COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) as potensi_cnt,
+          (COALESCE(NULLIF(TRIM(ku.source_payload->>'sk'), ''), NULLIF(TRIM(ku.source_payload->>'surat_keputusan'), '')) IS NOT NULL) as has_sk,
+          (k.dokumen_rkps IS NOT NULL AND TRIM(LOWER(k.dokumen_rkps)) = 'sudah') as has_rkps,
+          jsonb_array_length(COALESCE(ku.produk, '[]'::jsonb) || COALESCE(ku.source_payload->'produk', '[]'::jsonb)) as produk_cnt,
+          jsonb_array_length(COALESCE(ku.potensi, '[]'::jsonb) || COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) as potensi_cnt,
           COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai
         FROM kups_records ku
+        JOIN kps_records k ON k.id = ku.lembaga_id
         LEFT JOIN kps_production_records p ON (p.kups_detail_id IS NOT NULL AND ku.source_payload->>'detail_id' = p.kups_detail_id)
-        GROUP BY ku.id, ku.kelas, ku.source_payload
+        GROUP BY ku.id, ku.kelas, ku.produk, ku.potensi, ku.source_payload, k.dokumen_rkps
+      ),
+      scored AS (
+        SELECT 
+          id, kelas, total_nilai,
+          (
+            (CASE WHEN has_sk THEN 1 ELSE 0 END) +
+            (CASE WHEN produk_cnt > 0 THEN 1 ELSE 0 END) +
+            (CASE WHEN total_nilai > 0 THEN 1 ELSE 0 END) +
+            (CASE WHEN potensi_cnt > 0 THEN 1 ELSE 0 END) +
+            (CASE WHEN has_rkps THEN 1 ELSE 0 END)
+          ) * 20 as score
+        FROM kups_summary
       )
       SELECT 
-        COUNT(CASE WHEN kelas = 'BIRU' AND produk_cnt > 0 AND total_nilai > 0 THEN 1 END) as biru_sangat_siap,
-        COUNT(CASE WHEN kelas = 'BIRU' AND (produk_cnt > 0 OR total_nilai > 0) THEN 1 END) as biru_potensial,
+        COUNT(CASE WHEN kelas = 'BIRU' AND score >= 80 THEN 1 END) as biru_sangat_siap,
+        COUNT(CASE WHEN kelas = 'BIRU' AND score >= 40 THEN 1 END) as biru_potensial,
         COUNT(CASE WHEN kelas = 'BIRU' THEN 1 END) as total_biru,
         
-        COUNT(CASE WHEN kelas = 'PERAK' AND total_nilai > 0 AND produk_cnt > 0 THEN 1 END) as perak_sangat_siap,
-        COUNT(CASE WHEN kelas = 'PERAK' AND total_nilai > 0 THEN 1 END) as perak_potensial,
+        COUNT(CASE WHEN kelas = 'PERAK' AND score >= 80 THEN 1 END) as perak_sangat_siap,
+        COUNT(CASE WHEN kelas = 'PERAK' AND score >= 40 THEN 1 END) as perak_potensial,
         COUNT(CASE WHEN kelas = 'PERAK' THEN 1 END) as total_perak,
 
-        COUNT(CASE WHEN kelas = 'EMAS' AND total_nilai >= 50000000 THEN 1 END) as emas_kandidat_audit,
+        COUNT(CASE WHEN kelas = 'EMAS' AND score >= 80 AND total_nilai >= 50000000 THEN 1 END) as emas_kandidat_audit,
         COUNT(CASE WHEN kelas = 'EMAS' THEN 1 END) as total_emas
-      FROM kups_summary
+      FROM scored
     `);
 
     const rawStats = statsRes.rows[0];
@@ -178,18 +193,22 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
     const params: any[] = [];
     let pIdx = 1;
 
+    const hasProgressExpr = `(
+      (ku.source_payload->>'sk' IS NOT NULL AND TRIM(ku.source_payload->>'sk') != '')
+      OR jsonb_array_length(COALESCE(ku.produk, '[]'::jsonb) || COALESCE(ku.source_payload->'produk', '[]'::jsonb)) > 0
+      OR COALESCE(pr.total_nilai, 0) > 0
+      OR jsonb_array_length(COALESCE(ku.potensi, '[]'::jsonb) || COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) > 0
+      OR (k.dokumen_rkps IS NOT NULL AND TRIM(LOWER(k.dokumen_rkps)) = 'sudah')
+    )`;
+
     if (targetTier === 'PERAK') {
-      whereConditions.push(`ku.kelas = 'BIRU' AND (jsonb_array_length(COALESCE(ku.source_payload->'produk', '[]'::jsonb)) > 0 OR COALESCE(pr.total_nilai, 0) > 0)`);
+      whereConditions.push(`ku.kelas = 'BIRU' AND ${hasProgressExpr}`);
     } else if (targetTier === 'EMAS') {
-      whereConditions.push(`ku.kelas = 'PERAK' AND COALESCE(pr.total_nilai, 0) > 0`);
+      whereConditions.push(`ku.kelas = 'PERAK' AND ${hasProgressExpr}`);
     } else if (targetTier === 'PLATINUM') {
-      whereConditions.push(`ku.kelas = 'EMAS' AND COALESCE(pr.total_nilai, 0) >= 50000000`);
+      whereConditions.push(`ku.kelas = 'EMAS' AND ${hasProgressExpr}`);
     } else {
-      whereConditions.push(`(
-        (ku.kelas = 'BIRU' AND (jsonb_array_length(COALESCE(ku.source_payload->'produk', '[]'::jsonb)) > 0 OR COALESCE(pr.total_nilai, 0) > 0))
-        OR (ku.kelas = 'PERAK' AND COALESCE(pr.total_nilai, 0) > 0)
-        OR (ku.kelas = 'EMAS' AND COALESCE(pr.total_nilai, 0) >= 50000000)
-      )`);
+      whereConditions.push(`ku.kelas IN ('BIRU', 'PERAK', 'EMAS') AND ${hasProgressExpr}`);
     }
 
     if (provinsi && typeof provinsi === 'string' && provinsi.trim() !== '') {
@@ -267,17 +286,23 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
         COALESCE(pr.transaksi_count, 0) as transaksi_count,
         COALESCE(pr.komoditas_list, '') as komoditas_list,
         COALESCE(pr.transaksi_list, '[]'::json) as transaksi_list,
-        jsonb_array_length(COALESCE(ku.source_payload->'produk', '[]'::jsonb)) as produk_count,
-        jsonb_array_length(COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) as potensi_count,
-        COALESCE(ku.source_payload->'produk', '[]'::jsonb) as produk_list,
-        COALESCE(ku.source_payload->'potensi', '[]'::jsonb) as potensi_list,
-        NULLIF(TRIM(ku.source_payload->>'sk'), '') as sk_kups,
-        (ku.source_payload->>'sk' IS NOT NULL AND TRIM(ku.source_payload->>'sk') != '') as has_sk_kups
+        jsonb_array_length(COALESCE(ku.produk, '[]'::jsonb) || COALESCE(ku.source_payload->'produk', '[]'::jsonb)) as produk_count,
+        jsonb_array_length(COALESCE(ku.potensi, '[]'::jsonb) || COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) as potensi_count,
+        (COALESCE(ku.produk, '[]'::jsonb) || COALESCE(ku.source_payload->'produk', '[]'::jsonb)) as produk_list,
+        (COALESCE(ku.potensi, '[]'::jsonb) || COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) as potensi_list,
+        COALESCE(NULLIF(TRIM(ku.source_payload->>'sk'), ''), NULLIF(TRIM(ku.source_payload->>'surat_keputusan'), '')) as sk_kups,
+        (
+          (CASE WHEN COALESCE(NULLIF(TRIM(ku.source_payload->>'sk'), ''), NULLIF(TRIM(ku.source_payload->>'surat_keputusan'), '')) IS NOT NULL THEN 1 ELSE 0 END) +
+          (CASE WHEN jsonb_array_length(COALESCE(ku.produk, '[]'::jsonb) || COALESCE(ku.source_payload->'produk', '[]'::jsonb)) > 0 THEN 1 ELSE 0 END) +
+          (CASE WHEN COALESCE(pr.total_nilai, 0) > 0 THEN 1 ELSE 0 END) +
+          (CASE WHEN jsonb_array_length(COALESCE(ku.potensi, '[]'::jsonb) || COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) > 0 THEN 1 ELSE 0 END) +
+          (CASE WHEN k.dokumen_rkps IS NOT NULL AND TRIM(LOWER(k.dokumen_rkps)) = 'sudah' THEN 1 ELSE 0 END)
+        ) * 20 as skor_kesiapan
       FROM kups_records ku
       JOIN kps_records k ON k.id = ku.lembaga_id
       LEFT JOIN prod_agg pr ON pr.kups_detail_id = ku.source_payload->>'detail_id'
       ${whereClause}
-      ORDER BY pr.total_nilai DESC NULLS LAST, produk_count DESC, ku.nama_kups ASC
+      ORDER BY skor_kesiapan DESC, pr.total_nilai DESC NULLS LAST, produk_count DESC, ku.nama_kups ASC
       LIMIT $${pIdx} OFFSET $${pIdx + 1}
     `;
 
@@ -298,7 +323,7 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
       // 2. SK KUPS Murni: dari source_payload->>'sk' (SK Penetapan Unit Usaha KUPS oleh Kepala Balai PS)
       // JANGAN gunakan SK lembaga KPS sebagai fallback!
       const skKups = r.sk_kups || null;
-      const hasSkKups = Boolean(r.has_sk_kups === true || r.has_sk_kups === 'true');
+      const hasSkKups = Boolean(skKups && skKups.trim() !== '');
 
       // 3. Produk, Nilai, Potensi
       const hasProduk = produkCount > 0;

@@ -228,9 +228,17 @@ export const LembagaModal: React.FC<LembagaModalProps> = ({ lembagaId, onClose }
                                 {kups.nama_kups}
                               </h4>
                             </div>
-                            {kups.sk_penetapan && (
-                              <div className="text-[11px] text-earth-soil-muted mt-1 font-mono">
-                                SK KUPS: {kups.sk_penetapan} {kups.tanggal_penetapan ? `(${kups.tanggal_penetapan})` : ''}
+                            {kups.sk_penetapan ? (
+                              <div className="text-[11px] font-mono mt-1">
+                                <span className="text-stone-400">SK KUPS: </span>
+                                <span className="text-emerald-900 font-bold bg-emerald-50 px-1.5 py-0.5 border border-emerald-300">
+                                  {kups.sk_penetapan}
+                                </span>
+                                {kups.tanggal_penetapan && <span className="text-stone-400 text-[10px] ml-1">({kups.tanggal_penetapan})</span>}
+                              </div>
+                            ) : (
+                              <div className="text-[10px] font-mono mt-1 text-amber-800 italic bg-amber-50 px-1.5 py-0.5 border border-amber-200 inline-block">
+                                Belum Ada SK Penetapan KUPS
                               </div>
                             )}
                           </div>
