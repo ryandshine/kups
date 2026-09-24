@@ -93,7 +93,7 @@ overviewRouter.get('/', async (_req: Request, res: Response) => {
           STRING_AGG(DISTINCT p.kategori_komoditas, ', ') as kategori_list
         FROM kps_production_records p
         JOIN kps_records k ON p.kps_id = k.id
-        LEFT JOIN kups_records ku ON p.kps_id = ku.lembaga_id AND LOWER(TRIM(p.kups_nama)) = LOWER(TRIM(ku.nama_kups))
+        LEFT JOIN kups_records ku ON (p.kups_detail_id IS NOT NULL AND ku.source_payload->>'detail_id' = p.kups_detail_id) OR (p.kps_id = ku.lembaga_id AND LOWER(TRIM(p.kups_nama)) = LOWER(TRIM(ku.nama_kups)))
         WHERE p.nilai_ekonomi_rupiah > 0
         GROUP BY p.kups_nama, k.nama_lembaga, k.provinsi, k.kabupaten, k.skema
         ORDER BY total_nilai DESC
