@@ -275,7 +275,7 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
       const transaksiCount = parseInt(r.transaksi_count, 10) || 0;
       const produkCount = parseInt(r.produk_count, 10) || 0;
       const potensiCount = parseInt(r.potensi_count, 10) || 0;
-      const hasRkps = Boolean(r.dokumen_rkps && r.dokumen_rkps.trim() !== '');
+      const hasRkps = r.dokumen_rkps && r.dokumen_rkps.trim().toLowerCase() === 'sudah';
 
       let statusRekomendasi = 'POTENSIAL';
       let skorKesiapan = 60;
