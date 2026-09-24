@@ -86,7 +86,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
             <ul className="space-y-2 text-xs text-stone-300">
               <li className="flex items-start space-x-1.5">
                 <FileText className="w-3.5 h-3.5 text-stone-400 mt-0.5 shrink-0" />
-                <span>SK Dirjen PSKL No. 32/2022 tentang Klasifikasi KUPS</span>
+                <span>SK Dirjen PS No. 32/2022 tentang Klasifikasi KUPS</span>
               </li>
               <li className="flex items-start space-x-1.5">
                 <FileText className="w-3.5 h-3.5 text-stone-400 mt-0.5 shrink-0" />
@@ -103,7 +103,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
         {/* Bottom bar */}
         <div className="mt-8 pt-6 border-t border-earth-soil-light flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400">
           <div>
-            &copy; 2026 Direktorat Pengembangan Usaha Perhutanan Sosial, Ditjen PSKL, Kementerian Kehutanan.
+            &copy; 2026 Direktorat Pengembangan Usaha Perhutanan Sosial, Ditjen PS, Kementerian Kehutanan.
           </div>
           <div className="mt-2 sm:mt-0 font-mono text-[11px] text-stone-400">
             Domain: kups.ditpps.com

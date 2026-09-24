@@ -91,8 +91,8 @@ export const BerandaView: React.FC<BerandaViewProps> = ({ onNavigate }) => {
           <p className="mt-4 text-base sm:text-lg text-stone-300 leading-relaxed max-w-3xl">
             Sistem publik terpadu yang menampilkan progres klasifikasi kelas 
             <strong> Blue, Silver, Gold,</strong> hingga <strong>Platinum</strong> bagi 
-            11.000+ Kelompok Usaha Perhutanan Sosial (KUPS) di seluruh Indonesia berdasarkan 
-            15 kriteria kumulatif SK Dirjen PSKL No. 32/2022.
+            16.800+ Kelompok Usaha Perhutanan Sosial (KUPS) di seluruh Indonesia berdasarkan 
+            15 kriteria kumulatif SK Dirjen PS No. 32/2022.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -185,7 +185,7 @@ export const BerandaView: React.FC<BerandaViewProps> = ({ onNavigate }) => {
                 <span>Distribusi Nasional Kelas KUPS</span>
               </h2>
               <p className="text-xs text-earth-soil-muted mt-1">
-                Klasifikasi kemandirian usaha berdasarkan pemenuhan 15 kriteria kumulatif (SK Dirjen PSKL 32/2022)
+                Klasifikasi kemandirian usaha berdasarkan pemenuhan 15 kriteria kumulatif (SK Dirjen PS 32/2022)
               </p>
             </div>
             <button

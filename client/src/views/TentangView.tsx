@@ -23,21 +23,21 @@ export const TentangView: React.FC = () => {
     },
     {
       step: '02',
-      title: 'Validasi & Usulan Balai (BPSKL)',
-      actor: 'Balai Perhutanan Sosial dan Kemitraan Lingkungan',
-      desc: 'Balai PSKL memverifikasi kesesuaian dokumen dan usulan kenaikan kelas dari Biru ke Perak atau Perak ke Emas setiap semester (2 kali dalam setahun).',
+      title: 'Validasi & Usulan Balai (BPS)',
+      actor: 'Balai Perhutanan Sosial (BPS)',
+      desc: 'Balai PS memverifikasi kesesuaian dokumen dan usulan kenaikan kelas dari Biru ke Perak atau Perak ke Emas setiap semester (2 kali dalam setahun).',
     },
     {
       step: '03',
       title: 'Verifikasi Khusus Platinum (Formulir 1, 2, 3)',
-      actor: 'Tim Terpadu Ditjen PSKL & Balai',
+      actor: 'Tim Terpadu Ditjen PS & Balai PS',
       desc: 'Khusus calon KUPS Platinum, dilakukan verifikasi faktual lapangan menggunakan Formulir 1 (Lembar Verifikasi), Formulir 2 (Berita Acara), dan Formulir 3 (Profil KUPS) mencakup akses modal dan pasar ekspor.',
     },
     {
       step: '04',
-      title: 'Penetapan Surat Keputusan Dirjen PSKL',
-      actor: 'Direktur Jenderal PSKL',
-      desc: 'Dirjen PSKL menerbitkan SK resmi penetapan klasifikasi kelas KUPS dan sertifikat KUPS Platinum yang diintegrasikan langsung ke sistem database SIPEKAPS.',
+      title: 'Penetapan Surat Keputusan Dirjen PS',
+      actor: 'Direktur Jenderal Perhutanan Sosial',
+      desc: 'Dirjen PS menerbitkan SK resmi penetapan klasifikasi kelas KUPS dan sertifikat KUPS Platinum yang diintegrasikan langsung ke sistem database SIPEKAPS.',
     },
   ];
 
@@ -56,7 +56,7 @@ export const TentangView: React.FC = () => {
           <p className="mt-3 text-sm text-earth-soil-muted leading-relaxed">
             Portal ini merupakan kanal publik transparansi data kinerja dan capaian kemandirian
             Kelompok Usaha Perhutanan Sosial (KUPS) di bawah Direktorat Pengembangan Usaha Perhutanan Sosial,
-            Ditjen PSKL, Kementerian Kehutanan Republik Indonesia.
+            Ditjen PS, Kementerian Kehutanan Republik Indonesia.
           </p>
         </div>
       </section>
@@ -66,10 +66,10 @@ export const TentangView: React.FC = () => {
         <div className="bg-white border-2 border-earth-sand-border p-6 border-l-4 border-l-earth-terracotta">
           <Scale className="w-6 h-6 text-earth-terracotta mb-3" />
           <h3 className="font-bold text-base text-earth-soil">
-            SK Dirjen PSKL No. 32/2022
+            SK Dirjen PS No. 32/2022
           </h3>
           <p className="text-xs text-earth-soil-muted mt-2 leading-relaxed">
-            Surat Keputusan Direktur Jenderal Perhutanan Sosial dan Kemitraan Lingkungan Nomor SK.32/PSKL/SET/KUM.1/5/2022
+            Surat Keputusan Direktur Jenderal Perhutanan Sosial Nomor SK.32/PSKL/SET/KUM.1/5/2022
             tentang Pedoman Penilaian Klasifikasi Kelompok Usaha Perhutanan Sosial (KUPS).
           </p>
         </div>
@@ -174,7 +174,7 @@ export const TentangView: React.FC = () => {
               formal serta menembus rantai pasok ekspor atau mendatangkan wisatawan mancanegara.
             </p>
             <div className="text-[11px] font-mono text-emerald-900 pt-2 border-t border-emerald-300">
-              Verifikasi Faktual: Formulir 1, Formulir 2 (BA), Formulir 3 & Sertifikat Dirjen PSKL.
+              Verifikasi Faktual: Formulir 1, Formulir 2 (BA), Formulir 3 & Sertifikat Dirjen PS.
             </div>
           </div>
         </div>
@@ -230,7 +230,7 @@ export const TentangView: React.FC = () => {
               Mengapa nilai ekonomi rupiah tidak menentukan kenaikan kelas KUPS?
             </h4>
             <p className="text-xs text-earth-soil-muted mt-1 leading-relaxed">
-              Berdasarkan SK Dirjen PSKL No. 32/2022, nilai ekonomi adalah salah satu dari 15 syarat kumulatif
+              Berdasarkan SK Dirjen PS No. 32/2022, nilai ekonomi adalah salah satu dari 15 syarat kumulatif
               (indikator syarat nomor 15: telah mencatat nilai ekonomi di GoKUPS). Kematangan usaha diukur dari
               aspek kelembagaan (AD/ART), pasar, legalitas produk, kemitraan, dan permodalan, bukan hanya besaran omzet.
             </p>
@@ -242,7 +242,7 @@ export const TentangView: React.FC = () => {
             </h4>
             <p className="text-xs text-earth-soil-muted mt-1 leading-relaxed">
               Pengurus KUPS bersama Pendamping PS memperbarui data profil dan portofolio bukti syarat kumulatif
-              di aplikasi GoKUPS. Setiap periode semesteran, Balai PSKL dan Direktorat PUPS memvalidasi data tersebut.
+              di aplikasi GoKUPS. Setiap periode semesteran, Balai PS dan Direktorat PUPS memvalidasi data tersebut.
             </p>
           </div>
 

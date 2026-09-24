@@ -105,3 +105,24 @@ export async function fetchLembagaDetail(id: string): Promise<{ data: LembagaDet
   if (!res.ok) throw new Error('Gagal memuat detail lembaga');
   return res.json();
 }
+
+export interface ReadinessQuery {
+  targetTier?: 'PERAK' | 'EMAS' | 'PLATINUM' | 'ALL';
+  provinsi?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function fetchReadiness(params: ReadinessQuery = {}): Promise<import('./types').ReadinessResponse> {
+  const query = new URLSearchParams();
+  if (params.targetTier) query.set('targetTier', params.targetTier);
+  if (params.provinsi) query.set('provinsi', params.provinsi);
+  if (params.search) query.set('search', params.search);
+  if (params.page) query.set('page', params.page.toString());
+  if (params.limit) query.set('limit', params.limit.toString());
+
+  const res = await fetch(`${API_BASE}/progres-tier/readiness?${query.toString()}`);
+  if (!res.ok) throw new Error('Gagal memuat matriks kesiapan kenaikan kelas');
+  return res.json();
+}

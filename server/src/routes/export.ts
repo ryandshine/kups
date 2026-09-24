@@ -221,3 +221,98 @@ exportRouter.get('/lembaga.csv', async (req: Request, res: Response) => {
     res.status(500).send('Gagal mengekspor data lembaga');
   }
 });
+
+exportRouter.get('/readiness.csv', async (req: Request, res: Response) => {
+  try {
+    const { targetTier = 'PERAK', provinsi, search } = req.query;
+
+    const whereConditions: string[] = [];
+    const params: any[] = [];
+    let pIdx = 1;
+
+    if (targetTier === 'PERAK') {
+      whereConditions.push(`ku.kelas = 'BIRU' AND (jsonb_array_length(COALESCE(ku.source_payload->'produk', '[]'::jsonb)) > 0 OR COALESCE(pr.total_nilai, 0) > 0)`);
+    } else if (targetTier === 'EMAS') {
+      whereConditions.push(`ku.kelas = 'PERAK' AND COALESCE(pr.total_nilai, 0) > 0`);
+    } else if (targetTier === 'PLATINUM') {
+      whereConditions.push(`ku.kelas = 'EMAS' AND COALESCE(pr.total_nilai, 0) >= 50000000`);
+    } else {
+      whereConditions.push(`(
+        (ku.kelas = 'BIRU' AND (jsonb_array_length(COALESCE(ku.source_payload->'produk', '[]'::jsonb)) > 0 OR COALESCE(pr.total_nilai, 0) > 0))
+        OR (ku.kelas = 'PERAK' AND COALESCE(pr.total_nilai, 0) > 0)
+        OR (ku.kelas = 'EMAS' AND COALESCE(pr.total_nilai, 0) >= 50000000)
+      )`);
+    }
+
+    if (provinsi && typeof provinsi === 'string' && provinsi.trim() !== '') {
+      whereConditions.push(`k.provinsi ILIKE $${pIdx}`);
+      params.push(provinsi.trim());
+      pIdx++;
+    }
+
+    if (search && typeof search === 'string' && search.trim() !== '') {
+      whereConditions.push(`(ku.nama_kups ILIKE $${pIdx} OR k.nama_lembaga ILIKE $${pIdx} OR k.kabupaten ILIKE $${pIdx})`);
+      params.push(`%${search.trim()}%`);
+      pIdx++;
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    const dataSql = `
+      WITH prod_agg AS (
+        SELECT 
+          p.kups_detail_id,
+          COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai,
+          COUNT(p.id) as transaksi_count,
+          STRING_AGG(DISTINCT p.komoditas, '; ') as komoditas_list
+        FROM kps_production_records p
+        WHERE p.kups_detail_id IS NOT NULL
+        GROUP BY p.kups_detail_id
+      )
+      SELECT 
+        ku.nama_kups,
+        ku.kelas as kelas_sekarang,
+        k.nama_lembaga,
+        k.surat_keputusan,
+        k.skema,
+        k.provinsi,
+        k.kabupaten,
+        k.nama_balai,
+        COALESCE(pr.total_nilai, 0) as total_nilai,
+        COALESCE(pr.transaksi_count, 0) as transaksi_count,
+        COALESCE(pr.komoditas_list, '') as komoditas_list,
+        jsonb_array_length(COALESCE(ku.source_payload->'produk', '[]'::jsonb)) as produk_count,
+        jsonb_array_length(COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) as potensi_count
+      FROM kups_records ku
+      JOIN kps_records k ON k.id = ku.lembaga_id
+      LEFT JOIN prod_agg pr ON pr.kups_detail_id = ku.source_payload->>'detail_id'
+      ${whereClause}
+      ORDER BY pr.total_nilai DESC NULLS LAST, produk_count DESC, ku.nama_kups ASC
+      LIMIT 1000
+    `;
+
+    const dataRes = await pool.query(dataSql, params);
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="nominasi-kups-siap-naik-kelas-${targetTier.toString().toLowerCase()}.csv"`);
+
+    let csv = 'Rank,Nama KUPS,Kelas Saat Ini,Target Usulan,Status Kesiapan,Nama Lembaga,Nomor SK,Provinsi,Kabupaten,Balai PS,Skema PS,Total Nilai Ekonomi (Rp),Jumlah Transaksi,Komoditas,Jumlah Produk,Jumlah Potensi,Rekomendasi Aksi\n';
+
+    let rank = 1;
+    for (const r of dataRes.rows) {
+      const escape = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`;
+      const target = r.kelas_sekarang === 'BIRU' ? 'PERAK' : r.kelas_sekarang === 'PERAK' ? 'EMAS' : 'PLATINUM';
+      const isSangatSiap = (r.kelas_sekarang === 'BIRU' && r.produk_count > 0 && r.total_nilai > 0) || (r.kelas_sekarang === 'PERAK' && r.produk_count > 0 && r.total_nilai > 0);
+      const statusKesiapan = isSangatSiap ? 'SANGAT SIAP (100%)' : r.total_nilai > 0 ? 'SIAP (85%)' : 'POTENSIAL (70%)';
+      const rekomendasi = isSangatSiap ? 'Prioritas Sidang Penetapan Semesteran Dirjen PS' : 'Lengkapi kelengkapan administrasi di GoKUPS';
+
+      csv += `${rank},${escape(r.nama_kups)},${r.kelas_sekarang},${target},${escape(statusKesiapan)},${escape(r.nama_lembaga)},${escape(r.surat_keputusan)},${escape(r.provinsi)},${escape(r.kabupaten)},${escape(r.nama_balai)},${escape(r.skema)},${r.total_nilai},${r.transaksi_count},${escape(r.komoditas_list)},${r.produk_count},${r.potensi_count},${escape(rekomendasi)}\n`;
+      rank++;
+    }
+
+    res.send(csv);
+  } catch (err: any) {
+    console.error('[Export Readiness Error]:', err);
+    res.status(500).send('Gagal mengekspor data kesiapan');
+  }
+});

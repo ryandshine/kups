@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Portal Publik Data KUPS & Peta Komoditas - Ditjen PSKL Kementerian Kehutanan",
+  "description": "Portal Publik Data KUPS & Peta Komoditas - Ditjen PS Kementerian Kehutanan",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "tsx watch server/src/index.ts",

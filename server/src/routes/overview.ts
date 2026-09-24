@@ -47,7 +47,7 @@ overviewRouter.get('/', async (_req: Request, res: Response) => {
         BIRU: 'Tahap inisiasi kelembagaan, pemetaan potensi usaha, dan penyusunan dokumen RKPS (Syarat 1 s.d. 3).',
         PERAK: 'Tahap operasional, telah memiliki unit usaha, produk dipasarkan, akses permodalan, dan pasar lokal (Syarat 1 s.d. 7).',
         EMAS: 'Tahap maju & mandiri, sertifikasi produk, kemitraan offtaker, menyerap tenaga kerja, dan input nilai ekonomi GoKUPS (Syarat 1 s.d. 15).',
-        PLATINUM: 'Tahap unggul & ekspor, lolos verifikasi faktual lapangan Tim Gabungan Pusat/Balai dengan sertifikat resmi Dirjen PSKL.',
+        PLATINUM: 'Tahap unggul & ekspor, lolos verifikasi faktual lapangan Tim Gabungan Pusat/Balai dengan sertifikat resmi Dirjen PS.',
       };
 
       const tierDistribution = tierRes.rows.map((r) => ({

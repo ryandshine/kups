@@ -321,7 +321,7 @@ export const LembagaModal: React.FC<LembagaModalProps> = ({ lembagaId, onClose }
         {/* Modal Footer */}
         <div className="bg-earth-sand-surface border-t border-earth-sand-border px-5 py-3 flex items-center justify-between text-xs font-mono shrink-0">
           <div className="text-earth-soil-muted">
-            Sumber Data: SIPEKAPS & GoKUPS Ditjen PSKL Kementerian Kehutanan
+            Sumber Data: SIPEKAPS & GoKUPS Ditjen PS Kementerian Kehutanan
           </div>
           <button
             onClick={onClose}

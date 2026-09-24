@@ -157,3 +157,58 @@ export interface LembagaResponse {
     totalPages: number;
   };
 }
+
+export interface ReadinessCandidate {
+  id: string;
+  nama_kups: string;
+  kelas_sekarang: KupsTier;
+  target_kelas: KupsTier;
+  lembaga_id: string;
+  nama_lembaga: string;
+  surat_keputusan: string;
+  skema: string;
+  provinsi: string;
+  kabupaten: string;
+  nama_balai: string;
+  total_nilai: number;
+  transaksi_count: number;
+  komoditas_list: string;
+  produk_count: number;
+  potensi_count: number;
+  checklist: {
+    kelembagaan_sk: boolean;
+    potensi: boolean;
+    rkps: boolean;
+    produk: boolean;
+    nilai_ekonomi: boolean;
+    skor: number;
+  };
+  status_rekomendasi: 'SANGAT_SIAP' | 'SIAP' | 'POTENSIAL' | 'KANDIDAT_AUDIT';
+  rekomendasi_tindakan: string;
+}
+
+export interface ReadinessResponse {
+  pipelineStats: {
+    biru_to_perak: {
+      total: number;
+      sangat_siap: number;
+      potensial: number;
+    };
+    perak_to_emas: {
+      total: number;
+      sangat_siap: number;
+      potensial: number;
+    };
+    emas_to_platinum: {
+      total: number;
+      kandidat_audit: number;
+    };
+  };
+  candidates: ReadinessCandidate[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
