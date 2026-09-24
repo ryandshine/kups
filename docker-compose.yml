@@ -1,0 +1,31 @@
+services:
+  portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://gealgeolgeo:GeoSecure2026R3set@gealgeolgeo-postgis:5432/sipekaps}
+      - PORT=3000
+      - NODE_ENV=production
+    networks:
+      - dokploy-network
+      - gealgeolgeo-db
+    labels:
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.enable=true"
+      - "traefik.http.routers.kups-portal.entrypoints=web"
+      - "traefik.http.routers.kups-portal.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.kups-portal.rule=Host(`kups.ditpps.com`)"
+      - "traefik.http.routers.kups-portal-secure.entrypoints=websecure"
+      - "traefik.http.routers.kups-portal-secure.rule=Host(`kups.ditpps.com`)"
+      - "traefik.http.routers.kups-portal-secure.service=kups-portal-secure"
+      - "traefik.http.routers.kups-portal-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.services.kups-portal.loadbalancer.server.port=3000"
+      - "traefik.http.services.kups-portal-secure.loadbalancer.server.port=3000"
+
+networks:
+  dokploy-network:
+    external: true
+  gealgeolgeo-db:
+    external: true
