@@ -91,3 +91,69 @@ export interface CommodityItem {
   count: number;
   total_nilai: number;
 }
+
+export interface LembagaKupsItem {
+  id: string;
+  nama_kups: string;
+  kelas: KupsTier;
+  nilai_ekonomi: number;
+  transaksi_count: number;
+  komoditas: string;
+  potensi_count?: number;
+  produk_count?: number;
+}
+
+export interface LembagaItem {
+  id: string;
+  nama_lembaga: string;
+  surat_keputusan: string;
+  skema: string;
+  luas_total: number;
+  provinsi: string;
+  kabupaten: string;
+  kecamatan: string;
+  desa: string;
+  nama_balai: string;
+  seksi_wilayah: string;
+  nama_ketua: string;
+  no_telp: string;
+  anggota_pria: number;
+  anggota_wanita: number;
+  total_anggota: number;
+  jumlah_kups: number;
+  total_nilai: number;
+  total_transaksi: number;
+  kups_list: LembagaKupsItem[];
+}
+
+export interface LembagaDetailKupsItem extends LembagaKupsItem {
+  sk_penetapan?: string;
+  tanggal_penetapan?: string;
+  detail_id?: string;
+  potensi: any[];
+  produk: any[];
+}
+
+export interface LembagaDetail extends Omit<LembagaItem, 'kups_list'> {
+  tanggal: string;
+  dokumen_rkps: string;
+  luas_breakdown: {
+    hl: number;
+    hp: number;
+    hpt: number;
+    hpk: number;
+    hk: number;
+    apl: number;
+  };
+  kups_list: LembagaDetailKupsItem[];
+}
+
+export interface LembagaResponse {
+  data: LembagaItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}

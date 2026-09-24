@@ -130,3 +130,94 @@ exportRouter.get('/leaderboard.csv', async (req: Request, res: Response) => {
     res.status(500).send('Gagal mengekspor data');
   }
 });
+
+exportRouter.get('/lembaga.csv', async (req: Request, res: Response) => {
+  try {
+    const { search, provinsi, skema, kelas } = req.query;
+
+    const whereConditions: string[] = [];
+    const params: any[] = [];
+    let pIdx = 1;
+
+    if (provinsi && typeof provinsi === 'string' && provinsi.trim() !== '') {
+      whereConditions.push(`k.provinsi ILIKE $${pIdx}`);
+      params.push(provinsi.trim());
+      pIdx++;
+    }
+
+    if (skema && typeof skema === 'string' && skema.trim() !== '') {
+      whereConditions.push(`k.skema ILIKE $${pIdx}`);
+      params.push(`%${skema.trim()}%`);
+      pIdx++;
+    }
+
+    if (search && typeof search === 'string' && search.trim() !== '') {
+      whereConditions.push(`(k.nama_lembaga ILIKE $${pIdx} OR k.surat_keputusan ILIKE $${pIdx} OR k.kabupaten ILIKE $${pIdx})`);
+      params.push(`%${search.trim()}%`);
+      pIdx++;
+    }
+
+    if (kelas && typeof kelas === 'string' && kelas.trim() !== '') {
+      whereConditions.push(`EXISTS (
+        SELECT 1 FROM kups_records ku_k 
+        WHERE ku_k.lembaga_id = k.id AND ku_k.kelas = $${pIdx}
+      )`);
+      params.push(kelas.trim().toUpperCase());
+      pIdx++;
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    const sql = `
+      WITH kups_agg AS (
+        SELECT 
+          ku.lembaga_id,
+          COUNT(ku.id) as jumlah_kups,
+          STRING_AGG(DISTINCT ku.nama_kups || ' (' || ku.kelas || ')', '; ') as kups_list,
+          COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai,
+          COUNT(p.id) as total_transaksi
+        FROM kups_records ku
+        LEFT JOIN kps_production_records p ON (p.kups_detail_id IS NOT NULL AND ku.source_payload->>'detail_id' = p.kups_detail_id)
+        GROUP BY ku.lembaga_id
+      )
+      SELECT 
+        k.nama_lembaga,
+        k.surat_keputusan,
+        k.skema,
+        k.luas_total,
+        k.provinsi,
+        k.kabupaten,
+        k.kecamatan,
+        k.desa,
+        k.nama_balai,
+        k.nama_ketua,
+        COALESCE(k.anggota_pria, 0) + COALESCE(k.anggota_wanita, 0) as total_anggota,
+        COALESCE(ka.jumlah_kups, 0) as jumlah_kups,
+        ka.kups_list,
+        COALESCE(ka.total_nilai, 0) as total_nilai,
+        COALESCE(ka.total_transaksi, 0) as total_transaksi
+      FROM kps_records k
+      JOIN kups_agg ka ON ka.lembaga_id = k.id
+      ${whereClause}
+      ORDER BY ka.total_nilai DESC, k.nama_lembaga ASC
+      LIMIT 1000
+    `;
+
+    const result = await pool.query(sql, params);
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="direktori-lembaga-kps.csv"');
+
+    let csv = 'Nama Lembaga,Nomor SK,Skema PS,Luas (Ha),Provinsi,Kabupaten,Kecamatan,Desa,Nama Balai,Nama Ketua,Total Anggota,Jumlah KUPS,Daftar KUPS Binaan,Total Nilai Ekonomi (Rp),Jumlah Transaksi\n';
+
+    for (const r of result.rows) {
+      const escape = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`;
+      csv += `${escape(r.nama_lembaga)},${escape(r.surat_keputusan)},${escape(r.skema)},${r.luas_total || 0},${escape(r.provinsi)},${escape(r.kabupaten)},${escape(r.kecamatan)},${escape(r.desa)},${escape(r.nama_balai)},${escape(r.nama_ketua)},${r.total_anggota},${r.jumlah_kups},${escape(r.kups_list)},${r.total_nilai},${r.total_transaksi}\n`;
+    }
+
+    res.send(csv);
+  } catch (err: any) {
+    console.error('[Export Lembaga Error]:', err);
+    res.status(500).send('Gagal mengekspor data lembaga');
+  }
+});

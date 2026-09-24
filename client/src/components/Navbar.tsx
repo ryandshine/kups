@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, MapPin, Trophy, BookOpen, Home, Menu, X, ShieldCheck } from 'lucide-react';
+import { Layers, MapPin, Trophy, BookOpen, Home, Menu, X, ShieldCheck, Building2 } from 'lucide-react';
 
 interface NavbarProps {
   currentTab: string;
@@ -13,7 +13,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
     { id: 'beranda', label: 'Beranda', icon: <Home className="w-4 h-4" /> },
     { id: 'progres-tier', label: 'Progres Tier', icon: <Layers className="w-4 h-4" /> },
     { id: 'peta-sebaran', label: 'Peta Sebaran', icon: <MapPin className="w-4 h-4" /> },
-    { id: 'leaderboard', label: 'Leaderboard', icon: <Trophy className="w-4 h-4" /> },
+    { id: 'leaderboard', label: 'Direktori & Leaderboard', icon: <Building2 className="w-4 h-4" /> },
     { id: 'tentang', label: 'Tentang & Metodologi', icon: <BookOpen className="w-4 h-4" /> },
   ];
 

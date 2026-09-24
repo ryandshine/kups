@@ -12,6 +12,7 @@ import { mapRouter } from './routes/map.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
 import { commoditiesRouter } from './routes/commodities.js';
 import { exportRouter } from './routes/export.js';
+import { lembagaRouter } from './routes/lembaga.js';
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use('/api/overview', overviewRouter);
 app.use('/api/progres-tier', progresTierRouter);
 app.use('/api/map', mapRouter);
 app.use('/api/leaderboard', leaderboardRouter);
+app.use('/api/lembaga', lembagaRouter);
 app.use('/api/commodities', commoditiesRouter);
 app.use('/api/export', exportRouter);
 
