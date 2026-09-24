@@ -158,14 +158,26 @@ export interface LembagaResponse {
   };
 }
 
+export interface ProductionTransaction {
+  komoditas?: string;
+  hasil_produk?: string;
+  volume?: string;
+  periode?: string;
+  nilai_ekonomi_rupiah?: number;
+  pemasaran?: string;
+}
+
 export interface ReadinessCandidate {
   id: string;
   nama_kups: string;
   kelas_sekarang: KupsTier;
   target_kelas: KupsTier;
+  detail_id?: string | null;
   lembaga_id: string;
   nama_lembaga: string;
-  surat_keputusan: string;
+  surat_keputusan: string;      // SK Lembaga KPS
+  sk_kups: string | null;       // SK Penetapan KUPS Murni (source_payload->>'sk')
+  has_sk_kups: boolean;
   skema: string;
   provinsi: string;
   kabupaten: string;
@@ -173,8 +185,12 @@ export interface ReadinessCandidate {
   total_nilai: number;
   transaksi_count: number;
   komoditas_list: string;
+  transaksi_list?: ProductionTransaction[];
   produk_count: number;
   potensi_count: number;
+  produk_list: Array<{ namaProduk?: string; jenisProduk?: string; izinUsaha?: string; [key: string]: any }>;
+  potensi_list: Array<{ komoditas?: string; deskripsi?: string; [key: string]: any }>;
+  dokumen_rkps: string;
   checklist: {
     kelembagaan_sk: boolean;
     potensi: boolean;

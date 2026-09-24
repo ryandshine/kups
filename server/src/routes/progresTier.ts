@@ -235,7 +235,17 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
           p.kups_detail_id,
           COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai,
           COUNT(p.id) as transaksi_count,
-          STRING_AGG(DISTINCT p.komoditas, ', ') as komoditas_list
+          STRING_AGG(DISTINCT p.komoditas, ', ') as komoditas_list,
+          json_agg(
+            json_build_object(
+              'komoditas', p.komoditas,
+              'hasil_produk', p.hasil_produk,
+              'volume', p.volume,
+              'periode', p.periode,
+              'nilai_ekonomi_rupiah', p.nilai_ekonomi_rupiah,
+              'pemasaran', p.pemasaran
+            ) ORDER BY p.nilai_ekonomi_rupiah DESC
+          ) FILTER (WHERE p.id IS NOT NULL) as transaksi_list
         FROM kps_production_records p
         WHERE p.kups_detail_id IS NOT NULL
         GROUP BY p.kups_detail_id
@@ -244,9 +254,10 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
         ku.id,
         ku.nama_kups,
         ku.kelas as kelas_sekarang,
+        ku.source_payload->>'detail_id' as detail_id,
         k.id as lembaga_id,
         k.nama_lembaga,
-        k.surat_keputusan,
+        k.surat_keputusan as surat_keputusan,
         k.skema,
         k.provinsi,
         k.kabupaten,
@@ -255,8 +266,13 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
         COALESCE(pr.total_nilai, 0) as total_nilai,
         COALESCE(pr.transaksi_count, 0) as transaksi_count,
         COALESCE(pr.komoditas_list, '') as komoditas_list,
+        COALESCE(pr.transaksi_list, '[]'::json) as transaksi_list,
         jsonb_array_length(COALESCE(ku.source_payload->'produk', '[]'::jsonb)) as produk_count,
-        jsonb_array_length(COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) as potensi_count
+        jsonb_array_length(COALESCE(ku.source_payload->'potensi', '[]'::jsonb)) as potensi_count,
+        COALESCE(ku.source_payload->'produk', '[]'::jsonb) as produk_list,
+        COALESCE(ku.source_payload->'potensi', '[]'::jsonb) as potensi_list,
+        NULLIF(TRIM(ku.source_payload->>'sk'), '') as sk_kups,
+        (ku.source_payload->>'sk' IS NOT NULL AND TRIM(ku.source_payload->>'sk') != '') as has_sk_kups
       FROM kups_records ku
       JOIN kps_records k ON k.id = ku.lembaga_id
       LEFT JOIN prod_agg pr ON pr.kups_detail_id = ku.source_payload->>'detail_id'
@@ -275,40 +291,43 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
       const transaksiCount = parseInt(r.transaksi_count, 10) || 0;
       const produkCount = parseInt(r.produk_count, 10) || 0;
       const potensiCount = parseInt(r.potensi_count, 10) || 0;
-      const hasRkps = r.dokumen_rkps && r.dokumen_rkps.trim().toLowerCase() === 'sudah';
+
+      // 1. Dokumen RKPS: string "Sudah"
+      const hasRkps = Boolean(r.dokumen_rkps && r.dokumen_rkps.trim().toLowerCase() === 'sudah');
+
+      // 2. SK KUPS Murni: dari source_payload->>'sk' (SK Penetapan Unit Usaha KUPS oleh Kepala Balai PS)
+      // JANGAN gunakan SK lembaga KPS sebagai fallback!
+      const skKups = r.sk_kups || null;
+      const hasSkKups = Boolean(r.has_sk_kups === true || r.has_sk_kups === 'true');
+
+      // 3. Produk, Nilai, Potensi
+      const hasProduk = produkCount > 0;
+      const hasNilai = totalNilai > 0;
+      const hasPotensi = potensiCount > 0;
+
+      // Hitung 5 indikator utama kesiapan naik kelas (@ 20%):
+      const indicators = [hasSkKups, hasProduk, hasNilai, hasPotensi, hasRkps];
+      const fulfilledCount = indicators.filter(Boolean).length;
+      const skorKesiapan = fulfilledCount * 20;
 
       let statusRekomendasi = 'POTENSIAL';
-      let skorKesiapan = 60;
       let rekomendasiTindakan = '';
 
-      if (kelasSekarang === 'BIRU') {
-        if (produkCount > 0 && totalNilai > 0) {
-          statusRekomendasi = 'SANGAT_SIAP';
-          skorKesiapan = 100;
-          rekomendasiTindakan = 'Prioritas Usulan Kenaikan ke PERAK pada sidang semesteran Dirjen PS (telah memiliki produk fisik & perputaran omzet).';
-        } else if (totalNilai > 0) {
-          statusRekomendasi = 'SIAP';
-          skorKesiapan = 85;
-          rekomendasiTindakan = 'Lengkapi administrasi katalog produk resmi di GoKUPS untuk pengesahan ke PERAK.';
-        } else {
-          statusRekomendasi = 'POTENSIAL';
-          skorKesiapan = 70;
-          rekomendasiTindakan = 'Lakukan pendampingan pencatatan transaksi ekonomi hasil penjualan produk lokal di GoKUPS.';
-        }
-      } else if (kelasSekarang === 'PERAK') {
-        if (totalNilai > 0 && produkCount > 0) {
-          statusRekomendasi = 'SANGAT_SIAP';
-          skorKesiapan = 100;
-          rekomendasiTindakan = 'Prioritas Usulan Kenaikan ke EMAS pada sidang semesteran Dirjen PS (telah berproduksi rutin & mencatat nilai ekonomi).';
-        } else {
-          statusRekomendasi = 'SIAP';
-          skorKesiapan = 80;
-          rekomendasiTindakan = 'Dorong pengurusan izin edar produk (P-IRT/Halal) dan perjanjian kemitraan offtaker.';
-        }
-      } else if (kelasSekarang === 'EMAS') {
-        statusRekomendasi = 'KANDIDAT_AUDIT';
-        skorKesiapan = 95;
-        rekomendasiTindakan = 'Siap diajukan audit verifikasi faktual lapangan (Formulir 1–3) oleh Tim Gabungan Ditjen PS & Balai PS untuk penetapan PLATINUM.';
+      if (skorKesiapan >= 80) {
+        statusRekomendasi = 'SANGAT_SIAP';
+        rekomendasiTindakan = `Prioritas Usulan Kenaikan ke ${targetKelas} pada sidang semesteran Dirjen PS (telah memenuhi ${fulfilledCount}/5 indikator utama).`;
+      } else if (skorKesiapan >= 60) {
+        statusRekomendasi = 'SIAP';
+        const missing = [];
+        if (!hasSkKups) missing.push('SK Penetapan KUPS');
+        if (!hasRkps) missing.push('Unggah RKPS');
+        if (!hasProduk) missing.push('Katalog Produk');
+        if (!hasNilai) missing.push('Pencatatan Transaksi');
+        if (!hasPotensi) missing.push('Data Potensi');
+        rekomendasiTindakan = `Siap diajukan setelah melengkapi: ${missing.join(', ')}.`;
+      } else {
+        statusRekomendasi = 'POTENSIAL';
+        rekomendasiTindakan = `Perlu pendampingan intensif dari Balai PS untuk melengkapi indikator legalitas dan kelayakan usaha (${fulfilledCount}/5 terpenuhi).`;
       }
 
       return {
@@ -316,9 +335,12 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
         nama_kups: r.nama_kups,
         kelas_sekarang: kelasSekarang,
         target_kelas: targetKelas,
+        detail_id: r.detail_id || null,
         lembaga_id: r.lembaga_id,
         nama_lembaga: r.nama_lembaga,
-        surat_keputusan: r.surat_keputusan || '-',
+        surat_keputusan: r.surat_keputusan || '-', // SK Lembaga KPS
+        sk_kups: skKups,                           // SK Penetapan KUPS Murni
+        has_sk_kups: hasSkKups,
         skema: r.skema,
         provinsi: r.provinsi,
         kabupaten: r.kabupaten,
@@ -326,14 +348,18 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
         total_nilai: totalNilai,
         transaksi_count: transaksiCount,
         komoditas_list: r.komoditas_list,
+        transaksi_list: Array.isArray(r.transaksi_list) ? r.transaksi_list : [],
         produk_count: produkCount,
         potensi_count: potensiCount,
+        produk_list: Array.isArray(r.produk_list) ? r.produk_list : [],
+        potensi_list: Array.isArray(r.potensi_list) ? r.potensi_list : [],
+        dokumen_rkps: r.dokumen_rkps || '',
         checklist: {
-          kelembagaan_sk: true,
-          potensi: potensiCount > 0,
+          kelembagaan_sk: hasSkKups,
+          potensi: hasPotensi,
           rkps: hasRkps,
-          produk: produkCount > 0,
-          nilai_ekonomi: totalNilai > 0,
+          produk: hasProduk,
+          nilai_ekonomi: hasNilai,
           skor: skorKesiapan,
         },
         status_rekomendasi: statusRekomendasi,

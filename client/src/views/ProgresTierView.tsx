@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { ProgresTierData, KupsTier, ReadinessResponse, ReadinessCandidate, ProvinceStat } from '../types';
 import { fetchProgresTier, fetchReadiness, fetchProvinces } from '../api';
 import { TierBadge } from '../components/TierBadge';
 import { LembagaModal } from '../components/LembagaModal';
+import { ChecklistPopover, ChecklistBadgeType } from '../components/ChecklistPopover';
 import { 
   CheckCircle2, 
   AlertTriangle, 
@@ -53,6 +54,10 @@ export const ProgresTierView: React.FC = () => {
 
   // Modal State
   const [selectedLembagaId, setSelectedLembagaId] = useState<string | null>(null);
+
+  // Checklist Popover State
+  const [activePopover, setActivePopover] = useState<{ candidate: ReadinessCandidate; badgeType: ChecklistBadgeType } | null>(null);
+  const popoverAnchorRef = useRef<HTMLSpanElement | null>(null);
 
   // Load Initial Progres Tier Data & Provinces
   useEffect(() => {
@@ -544,12 +549,24 @@ export const ProgresTierView: React.FC = () => {
                               <div 
                                 onClick={() => setSelectedLembagaId(cand.lembaga_id)}
                                 className="text-[11px] text-earth-forest font-semibold mt-0.5 hover:underline cursor-pointer"
-                                title="Klik untuk lihat profil SK Lembaga"
+                                title="Klik untuk lihat profil SK Lembaga KPS"
                               >
                                 {cand.nama_lembaga}
                               </div>
-                              <div className="text-[10px] text-earth-soil-muted font-mono mt-0.5">
-                                SK: {cand.surat_keputusan}
+                              <div className="text-[10px] font-mono mt-1">
+                                <span className="text-stone-400">SK KUPS: </span>
+                                {cand.sk_kups ? (
+                                  <span className="text-emerald-900 font-bold bg-emerald-50 px-1.5 py-0.2 border border-emerald-300">
+                                    {cand.sk_kups}
+                                  </span>
+                                ) : (
+                                  <span className="text-amber-800 italic bg-amber-50 px-1.5 py-0.2 border border-amber-300">
+                                    Belum Ada SK KUPS
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[9px] text-stone-400 font-mono mt-0.5">
+                                SK Lembaga: {cand.surat_keputusan || '-'}
                               </div>
                             </td>
 
@@ -583,36 +600,80 @@ export const ProgresTierView: React.FC = () => {
                             </td>
 
                             <td className="py-3 px-3 text-center">
-                              <div className="flex items-center justify-center space-x-1 font-mono text-[10px]">
-                                <span title="SK Penetapan KUPS" className="px-1 py-0.5 bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
-                                  SK
-                                </span>
-                                <span 
-                                  title={cand.checklist.produk ? `Ada ${cand.produk_count} Produk` : 'Belum ada produk'}
-                                  className={`px-1 py-0.5 font-bold border ${cand.checklist.produk ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-400 border-stone-300'}`}
-                                >
-                                  PROD
-                                </span>
-                                <span 
-                                  title={cand.checklist.nilai_ekonomi ? 'Omzet Transaksi Aktif' : 'Belum ada omzet'}
-                                  className={`px-1 py-0.5 font-bold border ${cand.checklist.nilai_ekonomi ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-400 border-stone-300'}`}
-                                >
-                                  RP
-                                </span>
-                                <span 
-                                  title={cand.checklist.potensi ? `Ada ${cand.potensi_count} Potensi` : 'Belum ada potensi'}
-                                  className={`px-1 py-0.5 font-bold border ${cand.checklist.potensi ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-400 border-stone-300'}`}
-                                >
-                                  POT
-                                </span>
-                                <span 
-                                  title={cand.checklist.rkps ? 'Dokumen RKPS Ada' : 'Belum unggah RKPS'}
-                                  className={`px-1 py-0.5 font-bold border ${cand.checklist.rkps ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-400 border-stone-300'}`}
-                                >
-                                  RKPS
-                                </span>
+                              <div className="relative flex items-center justify-center space-x-1 font-mono text-[10px]">
+                                {/* SK badge */}
+                                {(() => {
+                                  const isActive = activePopover?.candidate.id === cand.id && activePopover?.badgeType === 'sk';
+                                  return (
+                                    <span
+                                      ref={isActive ? (el => { popoverAnchorRef.current = el; }) : undefined}
+                                      onClick={(e) => { e.stopPropagation(); popoverAnchorRef.current = e.currentTarget as HTMLSpanElement; setActivePopover(isActive ? null : { candidate: cand, badgeType: 'sk' }); }}
+                                      title={cand.checklist.kelembagaan_sk ? `SK KUPS: ${cand.sk_kups} (Klik untuk rincian)` : 'Belum Ada SK KUPS (Klik untuk rincian)'}
+                                      className={`px-1 py-0.5 font-bold border cursor-pointer hover:opacity-80 select-none ${cand.checklist.kelembagaan_sk ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-400 border-stone-300'} ${isActive ? 'ring-2 ring-emerald-500 shadow-sm' : ''}`}
+                                    >SK</span>
+                                  );
+                                })()}
+                                {/* PROD badge */}
+                                {(() => {
+                                  const isActive = activePopover?.candidate.id === cand.id && activePopover?.badgeType === 'prod';
+                                  return (
+                                    <span
+                                      ref={isActive ? (el => { popoverAnchorRef.current = el; }) : undefined}
+                                      onClick={(e) => { e.stopPropagation(); popoverAnchorRef.current = e.currentTarget as HTMLSpanElement; setActivePopover(isActive ? null : { candidate: cand, badgeType: 'prod' }); }}
+                                      title={cand.checklist.produk ? `Ada ${cand.produk_count} produk fisik terdaftar (Klik untuk rincian)` : 'Belum ada produk fisik terdaftar (Klik untuk rincian)'}
+                                      className={`px-1 py-0.5 font-bold border cursor-pointer hover:opacity-80 select-none ${cand.checklist.produk ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-400 border-stone-300'} ${isActive ? 'ring-2 ring-blue-500 shadow-sm' : ''}`}
+                                    >PROD</span>
+                                  );
+                                })()}
+                                {/* RP badge */}
+                                {(() => {
+                                  const isActive = activePopover?.candidate.id === cand.id && activePopover?.badgeType === 'rp';
+                                  return (
+                                    <span
+                                      ref={isActive ? (el => { popoverAnchorRef.current = el; }) : undefined}
+                                      onClick={(e) => { e.stopPropagation(); popoverAnchorRef.current = e.currentTarget as HTMLSpanElement; setActivePopover(isActive ? null : { candidate: cand, badgeType: 'rp' }); }}
+                                      title={cand.checklist.nilai_ekonomi ? `Omzet: ${formatRupiah(cand.total_nilai)} (Klik untuk rincian transaksi)` : 'Belum ada transaksi omzet (Klik untuk rincian)'}
+                                      className={`px-1 py-0.5 font-bold border cursor-pointer hover:opacity-80 select-none ${cand.checklist.nilai_ekonomi ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-400 border-stone-300'} ${isActive ? 'ring-2 ring-orange-500 shadow-sm' : ''}`}
+                                    >RP</span>
+                                  );
+                                })()}
+                                {/* POT badge */}
+                                {(() => {
+                                  const isActive = activePopover?.candidate.id === cand.id && activePopover?.badgeType === 'pot';
+                                  return (
+                                    <span
+                                      ref={isActive ? (el => { popoverAnchorRef.current = el; }) : undefined}
+                                      onClick={(e) => { e.stopPropagation(); popoverAnchorRef.current = e.currentTarget as HTMLSpanElement; setActivePopover(isActive ? null : { candidate: cand, badgeType: 'pot' }); }}
+                                      title={cand.checklist.potensi ? `Ada ${cand.potensi_count} potensi komoditas (Klik untuk rincian)` : 'Belum ada data potensi komoditas (Klik untuk rincian)'}
+                                      className={`px-1 py-0.5 font-bold border cursor-pointer hover:opacity-80 select-none ${cand.checklist.potensi ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-400 border-stone-300'} ${isActive ? 'ring-2 ring-teal-500 shadow-sm' : ''}`}
+                                    >POT</span>
+                                  );
+                                })()}
+                                {/* RKPS badge */}
+                                {(() => {
+                                  const isActive = activePopover?.candidate.id === cand.id && activePopover?.badgeType === 'rkps';
+                                  return (
+                                    <span
+                                      ref={isActive ? (el => { popoverAnchorRef.current = el; }) : undefined}
+                                      onClick={(e) => { e.stopPropagation(); popoverAnchorRef.current = e.currentTarget as HTMLSpanElement; setActivePopover(isActive ? null : { candidate: cand, badgeType: 'rkps' }); }}
+                                      title={cand.checklist.rkps ? 'Dokumen RKPS: Sudah Terunggah (Klik untuk rincian)' : 'Dokumen RKPS: Belum Terunggah (Klik untuk rincian)'}
+                                      className={`px-1 py-0.5 font-bold border cursor-pointer hover:opacity-80 select-none ${cand.checklist.rkps ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-400 border-stone-300'} ${isActive ? 'ring-2 ring-purple-500 shadow-sm' : ''}`}
+                                    >RKPS</span>
+                                  );
+                                })()}
+
+                                {/* Popover panel */}
+                                {activePopover?.candidate.id === cand.id && (
+                                  <ChecklistPopover
+                                    candidate={activePopover.candidate}
+                                    badgeType={activePopover.badgeType}
+                                    onClose={() => setActivePopover(null)}
+                                    anchorRef={popoverAnchorRef}
+                                  />
+                                )}
                               </div>
                             </td>
+
 
                             <td className="py-3 px-4 text-right">
                               <div className="font-mono text-sm font-extrabold text-earth-terracotta">

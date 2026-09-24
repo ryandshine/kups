@@ -272,8 +272,10 @@ exportRouter.get('/readiness.csv', async (req: Request, res: Response) => {
       SELECT 
         ku.nama_kups,
         ku.kelas as kelas_sekarang,
+        NULLIF(TRIM(ku.source_payload->>'sk'), '') as sk_kups,
         k.nama_lembaga,
-        k.surat_keputusan,
+        k.surat_keputusan as sk_lembaga,
+        k.dokumen_rkps,
         k.skema,
         k.provinsi,
         k.kabupaten,
@@ -296,17 +298,24 @@ exportRouter.get('/readiness.csv', async (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="nominasi-kups-siap-naik-kelas-${targetTier.toString().toLowerCase()}.csv"`);
 
-    let csv = 'Rank,Nama KUPS,Kelas Saat Ini,Target Usulan,Status Kesiapan,Nama Lembaga,Nomor SK,Provinsi,Kabupaten,Balai PS,Skema PS,Total Nilai Ekonomi (Rp),Jumlah Transaksi,Komoditas,Jumlah Produk,Jumlah Potensi,Rekomendasi Aksi\n';
+    let csv = 'Rank,Nama KUPS,Kelas Saat Ini,Target Usulan,Skor Kesiapan,SK Penetapan KUPS,Nama Lembaga Induk,SK Lembaga KPS,Status RKPS,Provinsi,Kabupaten,Balai PS,Skema PS,Total Nilai Ekonomi (Rp),Jumlah Transaksi,Komoditas,Jumlah Produk,Jumlah Potensi,Rekomendasi Aksi\n';
 
     let rank = 1;
     for (const r of dataRes.rows) {
       const escape = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`;
       const target = r.kelas_sekarang === 'BIRU' ? 'PERAK' : r.kelas_sekarang === 'PERAK' ? 'EMAS' : 'PLATINUM';
-      const isSangatSiap = (r.kelas_sekarang === 'BIRU' && r.produk_count > 0 && r.total_nilai > 0) || (r.kelas_sekarang === 'PERAK' && r.produk_count > 0 && r.total_nilai > 0);
-      const statusKesiapan = isSangatSiap ? 'SANGAT SIAP (100%)' : r.total_nilai > 0 ? 'SIAP (85%)' : 'POTENSIAL (70%)';
-      const rekomendasi = isSangatSiap ? 'Prioritas Sidang Penetapan Semesteran Dirjen PS' : 'Lengkapi kelengkapan administrasi di GoKUPS';
+      const hasSkKups = Boolean(r.sk_kups);
+      const hasProduk = (parseInt(r.produk_count, 10) || 0) > 0;
+      const hasNilai = (parseInt(r.total_nilai, 10) || 0) > 0;
+      const hasPotensi = (parseInt(r.potensi_count, 10) || 0) > 0;
+      const hasRkps = Boolean(r.dokumen_rkps && r.dokumen_rkps.trim().toLowerCase() === 'sudah');
 
-      csv += `${rank},${escape(r.nama_kups)},${r.kelas_sekarang},${target},${escape(statusKesiapan)},${escape(r.nama_lembaga)},${escape(r.surat_keputusan)},${escape(r.provinsi)},${escape(r.kabupaten)},${escape(r.nama_balai)},${escape(r.skema)},${r.total_nilai},${r.transaksi_count},${escape(r.komoditas_list)},${r.produk_count},${r.potensi_count},${escape(rekomendasi)}\n`;
+      const fulfilled = [hasSkKups, hasProduk, hasNilai, hasPotensi, hasRkps].filter(Boolean).length;
+      const skor = fulfilled * 20;
+      const statusKesiapan = `${skor}% (${fulfilled}/5 Indikator)`;
+      const rekomendasi = skor >= 80 ? 'Prioritas Sidang Penetapan Semesteran Dirjen PS' : 'Lengkapi kelengkapan administrasi SK KUPS / RKPS di GoKUPS';
+
+      csv += `${rank},${escape(r.nama_kups)},${r.kelas_sekarang},${target},${escape(statusKesiapan)},${escape(r.sk_kups || 'Belum Ada')},${escape(r.nama_lembaga)},${escape(r.sk_lembaga)},${escape(hasRkps ? 'Sudah' : 'Belum')},${escape(r.provinsi)},${escape(r.kabupaten)},${escape(r.nama_balai)},${escape(r.skema)},${r.total_nilai},${r.transaksi_count},${escape(r.komoditas_list)},${r.produk_count},${r.potensi_count},${escape(rekomendasi)}\n`;
       rank++;
     }
 
