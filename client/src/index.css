@@ -53,3 +53,23 @@ body {
   box-shadow: none !important;
   border: 1px solid #7D4D2B !important;
 }
+
+/* Custom Leaflet Permanent Tooltip for Province Numbers */
+.leaflet-tooltip.province-map-label {
+  background: rgba(28, 25, 23, 0.88) !important;
+  color: #F5F5F4 !important;
+  border: 1px solid rgba(214, 211, 209, 0.45) !important;
+  border-radius: 2px !important;
+  padding: 2px 5px !important;
+  font-family: inherit !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
+.leaflet-tooltip.province-map-label::before,
+.leaflet-tooltip.province-map-label::after {
+  display: none !important;
+}
+
