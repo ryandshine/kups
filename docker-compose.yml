@@ -15,7 +15,6 @@ services:
       - "traefik.docker.network=dokploy-network"
       - "traefik.enable=true"
       - "traefik.http.routers.kups-portal.entrypoints=web"
-      - "traefik.http.routers.kups-portal.middlewares=redirect-to-https@file"
       - "traefik.http.routers.kups-portal.rule=Host(`kups.ditpps.com`)"
       - "traefik.http.routers.kups-portal.service=kups-portal"
       - "traefik.http.routers.kups-portal-secure.entrypoints=websecure"
