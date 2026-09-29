@@ -62,7 +62,7 @@ export interface CriteriaItem {
   penjelasan: string;
   indikator_bukti: string;
   gap_percentage: number;
-  status_verifikasi: 'Otomatis GoKUPS' | 'Verifikasi Khusus Lapangan';
+  status_verifikasi: 'Otomatis Sistem' | 'Verifikasi Khusus Lapangan';
 }
 
 export interface ProgresTierData {

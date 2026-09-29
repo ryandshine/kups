@@ -30,14 +30,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2 font-medium">
             <span className="inline-block w-2 h-2 bg-emerald-400"></span>
-            <span>KEMENTERIAN KEHUTANAN REPUBLIK INDONESIA</span>
+            <span>DIREKTORAT JENDERAL PERHUTANAN SOSIAL</span>
             <span className="hidden sm:inline text-stone-400">|</span>
             <span className="hidden sm:inline text-stone-300">Direktorat Pengembangan Usaha Perhutanan Sosial</span>
           </div>
           <div className="flex items-center space-x-2 text-stone-300 text-xs">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span className="hidden md:inline">Portal Publik Resmi (Read-Only)</span>
-            <span className="bg-earth-terracotta text-white font-mono text-[10px] px-1.5 py-0.2">LIVE SIPEKAPS</span>
+            <span className="bg-earth-terracotta text-white font-mono text-[10px] px-1.5 py-0.2">LIVE DATA</span>
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               <div className="flex items-center space-x-2">
                 <span className="text-xl font-extrabold tracking-tight text-white font-mono">PORTAL KUPS</span>
                 <span className="text-xs bg-earth-forest text-white px-1.5 py-0.5 border border-earth-forest-light font-medium">
-                  GoKUPS 2026
+                  NASIONAL 2026
                 </span>
               </div>
               <p className="text-[11px] text-stone-400 -mt-0.5 tracking-wide hidden sm:block">

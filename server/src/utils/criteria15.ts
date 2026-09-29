@@ -6,7 +6,7 @@ export interface CriterionDefinition {
   penjelasan: string;
   indikator_bukti: string;
   gap_percentage: number;
-  status_verifikasi: 'Otomatis GoKUPS' | 'Verifikasi Khusus Lapangan';
+  status_verifikasi: 'Otomatis Sistem' | 'Verifikasi Khusus Lapangan';
 }
 
 export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
@@ -19,7 +19,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Kelompok telah resmi terdaftar dan ditetapkan sebagai KUPS oleh pengelola persetujuan perhutanan sosial.',
     indikator_bukti: 'SK Penetapan KUPS oleh Kepala Balai PS / SK Pembentukan Kelompok Usaha',
     gap_percentage: 0,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 2,
@@ -27,9 +27,9 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     number: 2,
     syarat: 'Potensi Usaha Teridentifikasi',
     penjelasan: 'Telah melakukan identifikasi komoditas hasil hutan bukan kayu, kayu, atau jasa lingkungan di areal kerjanya.',
-    indikator_bukti: 'Data isian komoditas potensi di GoKUPS / dokumen profil awal KUPS',
+    indikator_bukti: 'Data isian komoditas potensi / dokumen profil awal KUPS',
     gap_percentage: 24,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 3,
@@ -37,9 +37,9 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     number: 3,
     syarat: 'Memiliki Dokumen RKPS',
     penjelasan: 'Memiliki Rencana Kerja Perhutanan Sosial (RKPS) yang telah disahkan dan memuat rencana usaha kelompok.',
-    indikator_bukti: 'File dokumen RKPS terunggah di sistem SIPEKAPS / GoKUPS',
+    indikator_bukti: 'File dokumen RKPS terunggah di sistem database terpadu',
     gap_percentage: 8,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
 
   // TIER PERAK (4 - 7, kumulatif dari Biru)
@@ -51,7 +51,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Telah membentuk struktur pengelola usaha (manajemen) yang menjalankan kegiatan produksi berkelanjutan.',
     indikator_bukti: 'Struktur kepengurusan unit usaha & berita acara pembentukan unit bisnis',
     gap_percentage: 68,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 5,
@@ -59,9 +59,9 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     number: 5,
     syarat: 'Memiliki Produk / Sarana Wisata Dipasarkan',
     penjelasan: 'Memiliki barang hasil olahan atau jasa wisata yang telah memiliki wujud produk riil dan kemasan siap jual.',
-    indikator_bukti: 'Katalog produk / foto sarana wisata di GoKUPS',
+    indikator_bukti: 'Katalog produk / foto sarana wisata terverifikasi',
     gap_percentage: 64,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 6,
@@ -71,7 +71,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Memperoleh dukungan modal baik swadaya anggota kelompok, hibah pemerintah/CSR, atau pinjaman perbankan/BPDAS.',
     indikator_bukti: 'Buku kas kelompok, bukti rekening usaha, atau surat perjanjian pembiayaan',
     gap_percentage: 75,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 7,
@@ -81,7 +81,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Telah memiliki pembeli rutin atau kunjungan wisatawan di tingkat lokal (desa, kecamatan, atau kabupaten).',
     indikator_bukti: 'Nota penjualan lokal atau buku tamu kunjungan wisata desa',
     gap_percentage: 62,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
 
   // TIER EMAS (8 - 15, kumulatif dari Perak)
@@ -93,7 +93,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Jangkauan pemasaran produk meluas ke tingkat provinsi/antar-pulau atau mendatangkan wisatawan regional.',
     indikator_bukti: 'Faktur pengiriman luar daerah / kemitraan distribusi pasar modern',
     gap_percentage: 85,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 9,
@@ -103,7 +103,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Memperoleh piagam penghargaan, juara wirausaha, atau festival produk kehutanan di tingkat daerah/nasional.',
     indikator_bukti: 'Piagam/sertifikat kejuaraan resmi dari instansi pemerintah/lembaga kredibel',
     gap_percentage: 91,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 10,
@@ -113,7 +113,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Memberikan lapangan kerja berbayar bagi anggota kelompok atau masyarakat sekitar hutan.',
     indikator_bukti: 'Daftar hadir dan bukti slip upah tenaga kerja lokal',
     gap_percentage: 79,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 11,
@@ -123,7 +123,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Produk telah mengantongi legalitas izin edar seperti P-IRT, Sertifikat Halal, BPOM, atau Standar Nasional (SNI).',
     indikator_bukti: 'Nomor sertifikat izin edar / sertifikat halal MUI-BPJPH / P-IRT Dinkes',
     gap_percentage: 87,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 12,
@@ -133,7 +133,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Kelompok memiliki Anggaran Dasar dan Anggaran Rumah Tangga (AD/ART) tertulis yang disepakati rapat anggota.',
     indikator_bukti: 'Buku dokumen AD/ART dan berita acara pengesahan musyawarah anggota',
     gap_percentage: 72,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 13,
@@ -143,7 +143,7 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Terikat dalam kesepakatan kerjasama jual-beli (MoU / PKS) dengan penampung hasil (offtaker), koperasi, atau BUMDes.',
     indikator_bukti: 'Surat perjanjian kerjasama (PKS / MoU) yang masih aktif',
     gap_percentage: 78,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 14,
@@ -153,17 +153,17 @@ export const CRITERIA_15_DEFINITIONS: CriterionDefinition[] = [
     penjelasan: 'Melunasi kewajiban Penerimaan Negara Bukan Pajak (PNBP) sesuai ketentuan peraturan perundangan kehutanan.',
     indikator_bukti: 'Bukti setor Surat Perintah Pembayaran (SPP) PNBP / Simponi Kemenkeu',
     gap_percentage: 89,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
   {
     id: 15,
     tier: 'EMAS',
     number: 15,
-    syarat: 'Mencatat Nilai Ekonomi di GoKUPS',
-    penjelasan: 'Rutin menginput volume produksi, harga jual, dan omzet transaksi komoditas ke dalam modul produksi GoKUPS.',
+    syarat: 'Mencatat Nilai Ekonomi Transaksi',
+    penjelasan: 'Rutin menginput volume produksi, harga jual, dan omzet transaksi komoditas ke dalam modul pencatatan produksi.',
     indikator_bukti: 'Rekaman transaksi produksi pada tabel data kps_production_records',
     gap_percentage: 58,
-    status_verifikasi: 'Otomatis GoKUPS',
+    status_verifikasi: 'Otomatis Sistem',
   },
 
   // TIER PLATINUM (Verifikasi Khusus Lapangan)

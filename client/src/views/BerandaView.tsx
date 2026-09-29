@@ -56,7 +56,7 @@ export const BerandaView: React.FC<BerandaViewProps> = ({ onNavigate }) => {
     return (
       <div className="py-24 text-center">
         <div className="inline-block p-4 border border-earth-clay bg-white text-earth-clay font-mono text-sm">
-          Menghubungkan ke database SIPEKAPS... Memuat ringkasan nasional...
+          Menghubungkan ke basis data terpadu... Memuat ringkasan nasional...
         </div>
       </div>
     );
@@ -83,7 +83,7 @@ export const BerandaView: React.FC<BerandaViewProps> = ({ onNavigate }) => {
         <div className="max-w-4xl">
           <div className="inline-flex items-center space-x-2 bg-earth-forest text-white text-xs px-2.5 py-1 mb-4 border border-earth-forest-light">
             <span className="w-1.5 h-1.5 bg-white"></span>
-            <span>PORTAL PUBLIK RESMI KEMENTERIAN KEHUTANAN</span>
+            <span>PORTAL DATA PERHUTANAN SOSIAL</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight font-sans">
             Monitoring Peningkatan Kelas KUPS & Nilai Ekonomi Nasional
@@ -126,7 +126,7 @@ export const BerandaView: React.FC<BerandaViewProps> = ({ onNavigate }) => {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xs uppercase font-extrabold text-earth-clay tracking-widest flex items-center space-x-2">
             <span className="w-2.5 h-2.5 bg-earth-terracotta"></span>
-            <span>INDIKATOR UTAMA NASIONAL (REAL-TIME SIPEKAPS)</span>
+            <span>INDIKATOR UTAMA NASIONAL (REAL-TIME DATA)</span>
           </h2>
           <span className="text-xs text-earth-soil-muted font-mono">
             38 Provinsi Terpetakan
@@ -152,7 +152,7 @@ export const BerandaView: React.FC<BerandaViewProps> = ({ onNavigate }) => {
           <StatCard
             title="Nilai Ekonomi"
             value={formatRupiah(kpi.total_nilai_ekonomi)}
-            subtitle="Tercatat di GoKUPS"
+            subtitle="Akumulasi Transaksi"
             icon={<Banknote className="w-5 h-5 text-earth-clay" />}
             accentColor="clay"
             badge="Akumulatif"
@@ -284,7 +284,7 @@ export const BerandaView: React.FC<BerandaViewProps> = ({ onNavigate }) => {
                   <span>Komoditas Unggulan Terbesar</span>
                 </h3>
                 <p className="text-xs text-earth-soil-muted mt-0.5">
-                  Berdasarkan akumulasi nilai ekonomi transaksi di GoKUPS
+                  Berdasarkan akumulasi nilai ekonomi transaksi
                 </p>
               </div>
               <button
@@ -322,7 +322,7 @@ export const BerandaView: React.FC<BerandaViewProps> = ({ onNavigate }) => {
             </div>
 
             <div className="mt-6 p-4 bg-earth-sand-surface border border-earth-sand-border text-xs text-earth-soil-muted leading-relaxed">
-              <strong>Catatan GoKUPS:</strong> Hasil Hutan Bukan Kayu (HHBK) mendominasi &gt;95% 
+              <strong>Catatan Komoditas:</strong> Hasil Hutan Bukan Kayu (HHBK) mendominasi &gt;95% 
               total nilai perputaran ekonomi komoditas perhutanan sosial nasional.
             </div>
           </div>

@@ -38,7 +38,7 @@ const BADGE_CONFIG: Record<ChecklistBadgeType, { label: string; icon: React.Reac
     color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
   },
   prod: {
-    label: 'Katalog Produk Fisik (GoKUPS)',
+    label: 'Katalog Produk Fisik',
     icon: <Package className="w-4 h-4" />,
     color: 'text-blue-700 bg-blue-50 border-blue-200',
   },
@@ -158,7 +158,7 @@ export const ChecklistPopover: React.FC<ChecklistPopoverProps> = ({
                 <XCircle className="w-8 h-8 mb-2 opacity-40 text-stone-500" />
                 <p className="text-xs font-semibold text-stone-600">Belum Ada Katalog Produk Fisik</p>
                 <p className="text-[10px] mt-1 text-stone-400">
-                  KUPS belum mendaftarkan barang/jasa komersial di GoKUPS.
+                  KUPS belum mendaftarkan barang/jasa komersial di sistem.
                 </p>
                 <div className="mt-2 text-[10px] px-2 py-1 bg-amber-50 border border-amber-200 text-amber-800">
                   Syarat Kenaikan ke PERAK: Memiliki produk fisik siap jual (Kriteria #5).
@@ -220,7 +220,7 @@ export const ChecklistPopover: React.FC<ChecklistPopoverProps> = ({
                 {formatRupiah(candidate.total_nilai)}
               </div>
               <div className="text-[10px] text-orange-600 font-semibold mt-0.5">
-                Total Omzet Transaksi Tercatat di GoKUPS
+                Total Omzet Transaksi Tercatat
               </div>
             </div>
 
@@ -265,12 +265,12 @@ export const ChecklistPopover: React.FC<ChecklistPopoverProps> = ({
             ) : candidate.total_nilai === 0 ? (
               <div className="flex items-center gap-2 text-xs text-stone-500 border border-stone-200 bg-stone-50 px-3 py-2">
                 <XCircle className="w-4 h-4 text-stone-400 flex-shrink-0" />
-                Belum ada rekaman transaksi omzet di GoKUPS.
+                Belum ada rekaman transaksi omzet tercatat.
               </div>
             ) : null}
 
             <div className="text-[10px] text-stone-400 border-t border-stone-100 pt-1">
-              Kriteria #15 SK Dirjen PS No. 32/2022: Mencatatkan nilai transaksi ekonomi di GoKUPS.
+              Kriteria #15 SK Dirjen PS No. 32/2022: Mencatatkan nilai transaksi ekonomi usaha.
             </div>
           </div>
         );
@@ -284,7 +284,7 @@ export const ChecklistPopover: React.FC<ChecklistPopoverProps> = ({
                 <XCircle className="w-8 h-8 mb-2 opacity-40 text-stone-500" />
                 <p className="text-xs font-semibold text-stone-600">Belum Ada Data Potensi Komoditas</p>
                 <p className="text-[10px] mt-1 text-stone-400">
-                  Data komoditas hasil hutan / jasa lingkungan belum diinput di GoKUPS.
+                  Data komoditas hasil hutan / jasa lingkungan belum terdata di sistem.
                 </p>
               </div>
             ) : (
@@ -338,7 +338,7 @@ export const ChecklistPopover: React.FC<ChecklistPopoverProps> = ({
                   Status RKPS: {sudah ? 'Sudah Terunggah & Sah' : 'Belum Terunggah'}
                 </div>
                 <div className="text-[10px] text-stone-500 mt-0.5">
-                  Verifikasi sistem SIPEKAPS / GoKUPS Ditjen PS
+                  Verifikasi sistem basis data Ditjen PS
                 </div>
               </div>
             </div>
@@ -402,15 +402,7 @@ export const ChecklistPopover: React.FC<ChecklistPopoverProps> = ({
       {/* Footer */}
       <div className="px-3 py-2 bg-stone-100 border-t border-stone-200 flex justify-between items-center text-[10px]">
         <span className="text-stone-500">Basis: SK Dirjen PS No. 32/2022</span>
-        <a
-          href="https://gokups.hutsos.kehutanan.go.id/public/chart/grading"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-earth-forest font-semibold flex items-center gap-1 hover:underline"
-        >
-          <span>GoKUPS</span>
-          <ExternalLink className="w-3 h-3" />
-        </a>
+        <span className="text-stone-400 font-mono text-[9px]">Sistem Terpadu KUPS</span>
       </div>
     </div>
   );

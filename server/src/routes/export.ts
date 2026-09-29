@@ -335,7 +335,7 @@ exportRouter.get('/readiness.csv', async (req: Request, res: Response) => {
       const fulfilled = [hasSkKups, hasProduk, hasNilai, hasPotensi, hasRkps].filter(Boolean).length;
       const skor = fulfilled * 20;
       const statusKesiapan = `${skor}% (${fulfilled}/5 Indikator)`;
-      const rekomendasi = skor >= 80 ? 'Prioritas Sidang Penetapan Semesteran Dirjen PS' : 'Lengkapi kelengkapan administrasi SK KUPS / RKPS di GoKUPS';
+      const rekomendasi = skor >= 80 ? 'Prioritas Sidang Penetapan Semesteran Dirjen PS' : 'Lengkapi kelengkapan administrasi SK KUPS / RKPS pada sistem';
 
       csv += `${rank},${escape(r.nama_kups)},${r.kelas_sekarang},${target},${escape(statusKesiapan)},${escape(r.sk_kups || 'Belum Ada')},${escape(r.nama_lembaga)},${escape(r.sk_lembaga)},${escape(hasRkps ? 'Sudah' : 'Belum')},${escape(r.provinsi)},${escape(r.kabupaten)},${escape(r.nama_balai)},${escape(r.skema)},${r.total_nilai},${r.transaksi_count},${escape(r.komoditas_list)},${r.produk_count},${r.potensi_count},${escape(rekomendasi)}\n`;
       rank++;

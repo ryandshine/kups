@@ -485,7 +485,7 @@ export const PetaSebaranView: React.FC = () => {
                     {formatRupiah(selectedProvince.total_nilai_ekonomi)}
                   </div>
                   <div className="text-[10px] text-earth-soil-muted mt-1">
-                    Tercatat di GoKUPS
+                    Tercatat di Sistem
                   </div>
                 </div>
               </div>
@@ -547,7 +547,7 @@ export const PetaSebaranView: React.FC = () => {
                   </div>
                 ) : (
                   <div className="p-3 bg-earth-sand-surface border border-earth-sand-border text-xs text-earth-soil-muted italic">
-                    Belum ada komoditas dengan pencatatan nilai transaksi di GoKUPS untuk provinsi ini.
+                    Belum ada komoditas dengan pencatatan nilai transaksi untuk provinsi ini.
                   </div>
                 )}
               </div>
@@ -555,7 +555,7 @@ export const PetaSebaranView: React.FC = () => {
               {/* Explanatory note */}
               <div className="p-3 bg-earth-forest-tint border border-earth-forest text-[11px] text-earth-forest-dark leading-relaxed">
                 <strong>Catatan Agregat:</strong> KUPS di {selectedProvince.name} didorong melengkapi 
-                checklist GoKUPS untuk mengajukan peningkatan kelas dari Perak ke Emas.
+                checklist kriteria untuk mengajukan peningkatan kelas dari Perak ke Emas.
               </div>
             </>
           ) : (

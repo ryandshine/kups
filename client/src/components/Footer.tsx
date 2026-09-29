@@ -21,11 +21,11 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
             <p className="text-sm text-stone-300 leading-relaxed max-w-lg">
               Portal Publik Data Terpadu Kelompok Usaha Perhutanan Sosial (KUPS) menyajikan
               informasi capaian kelas (Blue, Silver, Gold, Platinum) dan sebaran komoditas unggulan
-              berdasarkan basis data live SIPEKAPS dan GoKUPS Kementerian Kehutanan Republik Indonesia.
+              berdasarkan basis data terpadu Perhutanan Sosial Republik Indonesia.
             </p>
             <div className="pt-2 flex items-center space-x-2 text-xs text-stone-400">
               <Database className="w-4 h-4 text-emerald-400" />
-              <span>Sumber Data: Database Terpadu SIPEKAPS (Live Query)</span>
+              <span>Sumber Data: Basis Data Terpadu Perhutanan Sosial (Live Query)</span>
             </div>
           </div>
 
@@ -103,7 +103,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
         {/* Bottom bar */}
         <div className="mt-8 pt-6 border-t border-earth-soil-light flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400">
           <div>
-            &copy; 2026 Direktorat Pengembangan Usaha Perhutanan Sosial, Ditjen PS, Kementerian Kehutanan.
+            &copy; 2026 Direktorat Pengembangan Usaha Perhutanan Sosial, Ditjen PS.
           </div>
           <div className="mt-2 sm:mt-0 font-mono text-[11px] text-stone-400">
             Domain: kups.ditpps.com

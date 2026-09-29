@@ -17,9 +17,9 @@ export const TentangView: React.FC = () => {
   const steps = [
     {
       step: '01',
-      title: 'Pencatatan Mandiri di GoKUPS',
+      title: 'Pencatatan Mandiri Data Usaha',
       actor: 'Pengurus KUPS / Pendamping PS',
-      desc: 'Pengurus KUPS bersama Pendamping Perhutanan Sosial mengunggah dokumen RKPS, data potensi komoditas, jenis produk, dan catatan realisasi transaksi produksi di aplikasi GoKUPS.',
+      desc: 'Pengurus KUPS bersama Pendamping Perhutanan Sosial mengunggah dokumen RKPS, data potensi komoditas, jenis produk, dan catatan realisasi transaksi produksi ke dalam sistem basis data.',
     },
     {
       step: '02',
@@ -37,7 +37,7 @@ export const TentangView: React.FC = () => {
       step: '04',
       title: 'Penetapan Surat Keputusan Dirjen PS',
       actor: 'Direktur Jenderal Perhutanan Sosial',
-      desc: 'Dirjen PS menerbitkan SK resmi penetapan klasifikasi kelas KUPS dan sertifikat KUPS Platinum yang diintegrasikan langsung ke sistem database SIPEKAPS.',
+      desc: 'Dirjen PS menerbitkan SK resmi penetapan klasifikasi kelas KUPS dan sertifikat KUPS Platinum yang diintegrasikan langsung ke dalam sistem database terpadu.',
     },
   ];
 
@@ -56,7 +56,7 @@ export const TentangView: React.FC = () => {
           <p className="mt-3 text-sm text-earth-soil-muted leading-relaxed">
             Portal ini merupakan kanal publik transparansi data kinerja dan capaian kemandirian
             Kelompok Usaha Perhutanan Sosial (KUPS) di bawah Direktorat Pengembangan Usaha Perhutanan Sosial,
-            Ditjen PS, Kementerian Kehutanan Republik Indonesia.
+            Direktorat Jenderal Perhutanan Sosial Republik Indonesia.
           </p>
         </div>
       </section>
@@ -88,11 +88,11 @@ export const TentangView: React.FC = () => {
         <div className="bg-white border-2 border-earth-sand-border p-6 border-l-4 border-l-earth-clay">
           <Database className="w-6 h-6 text-earth-clay mb-3" />
           <h3 className="font-bold text-base text-earth-soil">
-            Integrasi Live SIPEKAPS & GoKUPS
+            Integrasi Live Data Terpadu
           </h3>
           <p className="text-xs text-earth-soil-muted mt-2 leading-relaxed">
-            Data portal ini diambil secara langsung (real-time query) dari basis data terpadu SIPEKAPS 
-            dan GoKUPS, menjamin keselarasan data tanpa manipulasi atau penundaan snapshot berkala.
+            Data portal ini diambil secara langsung (real-time query) dari basis data terpadu Perhutanan Sosial, 
+            menjamin keselarasan data tanpa manipulasi atau penundaan snapshot berkala.
           </p>
         </div>
       </section>
@@ -154,7 +154,7 @@ export const TentangView: React.FC = () => {
             <p className="text-xs text-earth-soil-muted leading-relaxed">
               KUPS memiliki jangkauan pasar regional hingga nasional, pernah menjadi pemenang lomba inovasi,
               mampu menyerap tenaga kerja warga sekitar, memiliki sertifikasi produk resmi (P-IRT/Halal/SNI),
-              memiliki AD/ART, bekerjasama dengan offtaker/BUMDes, patuh PNBP, dan mencatat nilai ekonomi di GoKUPS.
+              memiliki AD/ART, bekerjasama dengan offtaker/BUMDes, patuh PNBP, dan mencatat nilai ekonomi transaksi.
             </p>
             <div className="text-[11px] font-mono text-amber-900 pt-2 border-t border-amber-300">
               Syarat 8 s.d. 15: Pasar Luas, Juara Lomba, Tenaga Kerja, Sertifikasi, AD/ART, Mitra Usaha, PNBP, Nilai Ekonomi.
@@ -170,7 +170,7 @@ export const TentangView: React.FC = () => {
             <h4 className="font-bold text-sm text-emerald-950">Tahap Mandiri Unggul & Ekspor Internasional</h4>
             <p className="text-xs text-earth-soil-muted leading-relaxed">
               Tingkatan tertinggi KUPS yang telah memenuhi ke-15 syarat Emas dan telah lolos audit faktual
-              lapangan oleh Tim Gabungan Kementerian Kehutanan. KUPS Platinum terbukti memiliki akses pembiayaan
+              lapangan oleh Tim Gabungan Terpadu. KUPS Platinum terbukti memiliki akses pembiayaan
               formal serta menembus rantai pasok ekspor atau mendatangkan wisatawan mancanegara.
             </p>
             <div className="text-[11px] font-mono text-emerald-900 pt-2 border-t border-emerald-300">
@@ -231,7 +231,7 @@ export const TentangView: React.FC = () => {
             </h4>
             <p className="text-xs text-earth-soil-muted mt-1 leading-relaxed">
               Berdasarkan SK Dirjen PS No. 32/2022, nilai ekonomi adalah salah satu dari 15 syarat kumulatif
-              (indikator syarat nomor 15: telah mencatat nilai ekonomi di GoKUPS). Kematangan usaha diukur dari
+              (indikator syarat nomor 15: telah mencatat nilai ekonomi transaksi). Kematangan usaha diukur dari
               aspek kelembagaan (AD/ART), pasar, legalitas produk, kemitraan, dan permodalan, bukan hanya besaran omzet.
             </p>
           </div>
@@ -242,7 +242,7 @@ export const TentangView: React.FC = () => {
             </h4>
             <p className="text-xs text-earth-soil-muted mt-1 leading-relaxed">
               Pengurus KUPS bersama Pendamping PS memperbarui data profil dan portofolio bukti syarat kumulatif
-              di aplikasi GoKUPS. Setiap periode semesteran, Balai PS dan Direktorat PUPS memvalidasi data tersebut.
+              ke dalam sistem. Setiap periode semesteran, Balai PS dan Direktorat PUPS memvalidasi data tersebut.
             </p>
           </div>
 

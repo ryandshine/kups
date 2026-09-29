@@ -175,7 +175,7 @@ export const ProgresTierView: React.FC = () => {
               Progres & Matriks Kesiapan Kenaikan Kelas KUPS
             </h1>
             <p className="mt-2 text-sm text-earth-soil-muted leading-relaxed">
-              Sesuai Buku Saku Peningkatan Kelas KUPS (Kementerian Kehutanan), peningkatan kelas 
+              Sesuai Buku Saku Peningkatan Kelas KUPS, peningkatan kelas 
               <strong> tidak diukur semata oleh ambang omzet</strong>, melainkan melalui 
               <strong> pemenuhan 15 kriteria kumulatif</strong>. Fitur ini menyajikan radar KUPS yang telah 
               memenuhi indikator dan siap diusulkan naik kelas pada sidang semesteran Dirjen PS.
@@ -327,7 +327,7 @@ export const ProgresTierView: React.FC = () => {
                   KUPS Biru Sangat Siap Naik ke Perak
                 </div>
                 <p className="text-xs text-earth-soil-muted mt-2 leading-relaxed">
-                  Telah memiliki <strong>produk riil</strong> dan <strong>mencatatkan nilai transaksi ekonomi</strong> di GoKUPS.
+                  Telah memiliki <strong>produk riil</strong> dan <strong>mencatatkan nilai transaksi ekonomi</strong>.
                 </p>
               </div>
 
@@ -365,7 +365,7 @@ export const ProgresTierView: React.FC = () => {
                   KUPS Perak Sangat Siap Naik ke Emas
                 </div>
                 <p className="text-xs text-earth-soil-muted mt-2 leading-relaxed">
-                  Telah memiliki <strong>transaksi omzet rutin</strong> dan <strong>katalog produk aktif</strong> di GoKUPS.
+                  Telah memiliki <strong>transaksi omzet rutin</strong> dan <strong>katalog produk aktif</strong>.
                 </p>
               </div>
 
@@ -748,7 +748,7 @@ export const ProgresTierView: React.FC = () => {
               <div className="flex items-center space-x-1 font-mono text-xs">
                 <span className="text-earth-soil-muted">Verifikasi:</span>
                 <span className="bg-earth-sand-surface px-2 py-0.5 border border-earth-sand-border">
-                  Semesteran GoKUPS
+                  Semesteran Berkala
                 </span>
               </div>
             </div>
@@ -791,7 +791,7 @@ export const ProgresTierView: React.FC = () => {
                 )}
                 {activeTab === 'EMAS' && (
                   <span>
-                    <strong>Kelas Emas (Tahap Maju/Mandiri):</strong> Memiliki pasar regional/nasional, menyerap tenaga kerja, sertifikasi produk (P-IRT/Halal), kemitraan offtaker, dan mencatat nilai ekonomi di GoKUPS.
+                    <strong>Kelas Emas (Tahap Maju/Mandiri):</strong> Memiliki pasar regional/nasional, menyerap tenaga kerja, sertifikasi produk (P-IRT/Halal), kemitraan offtaker, dan mencatat nilai ekonomi transaksi.
                   </span>
                 )}
                 {activeTab === 'PLATINUM' && (
@@ -902,7 +902,7 @@ export const ProgresTierView: React.FC = () => {
                 <span>Sebaran Komposisi Kelas KUPS per Provinsi (38 Provinsi)</span>
               </h2>
               <p className="text-xs text-earth-soil-muted mt-0.5">
-                Data agregat kewilayahan berdasarkan rekapitulasi database resmi GoKUPS
+                Data agregat kewilayahan berdasarkan rekapitulasi basis data terpadu
               </p>
             </div>
 

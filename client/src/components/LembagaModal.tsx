@@ -190,7 +190,7 @@ export const LembagaModal: React.FC<LembagaModalProps> = ({ lembagaId, onClose }
                     {formatRupiah(data.total_nilai)}
                   </div>
                   <div className="text-[10px] text-earth-soil-muted mt-1">
-                    {data.total_transaksi} kali transaksi GoKUPS
+                    {data.total_transaksi} kali transaksi tercatat
                   </div>
                 </div>
               </div>
@@ -329,7 +329,7 @@ export const LembagaModal: React.FC<LembagaModalProps> = ({ lembagaId, onClose }
         {/* Modal Footer */}
         <div className="bg-earth-sand-surface border-t border-earth-sand-border px-5 py-3 flex items-center justify-between text-xs font-mono shrink-0">
           <div className="text-earth-soil-muted">
-            Sumber Data: SIPEKAPS & GoKUPS Ditjen PS Kementerian Kehutanan
+            Sumber Data: Basis Data Terpadu Ditjen PS
           </div>
           <button
             onClick={onClose}

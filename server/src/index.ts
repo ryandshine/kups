@@ -60,7 +60,7 @@ app.get('/api/health', async (_req: Request, res: Response) => {
       status: 'healthy',
       app: 'portal-kups',
       domain: 'kups.ditpps.com',
-      database: 'connected (sipekaps)',
+      database: 'connected',
       timestamp: new Date().toISOString(),
     });
   } catch (err: any) {

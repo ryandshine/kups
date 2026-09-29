@@ -98,7 +98,7 @@ progresTierRouter.get('/', async (_req: Request, res: Response) => {
           label: 'Hambatan Transisi Mandiri & Kemitraan Usaha Luas',
           gapDescription: 'Sebanyak 49.5% KUPS berada di kelas Perak. Produk sudah dipasarkan lokal, namun kesulitan menembus pasar regional/nasional dan belum mengantongi perizinan sertifikasi edar resmi.',
           keyHurdles: [
-            'Belum mencatatkan rekaman transaksi nilai ekonomi di GoKUPS (Syarat #15)',
+            'Belum mencatatkan rekaman transaksi nilai ekonomi (Syarat #15)',
             'Belum memiliki sertifikasi izin edar P-IRT / Halal / SNI (Syarat #11)',
             'Belum terikat perjanjian kerjasama (PKS/MoU) offtaker atau BUMDes (Syarat #13)',
             'Kepatuhan pembayaran PNBP kehutanan (Syarat #14)',
