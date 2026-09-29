@@ -1,4 +1,4 @@
-import { OverviewData, ProgresTierData, ProvinceStat, LeaderboardItem, CommodityItem, LembagaItem, LembagaDetail } from './types';
+import { OverviewData, ProgresTierData, ProvinceStat, LeaderboardItem, CommodityItem, LembagaItem, LembagaDetail, CommodityDistributionResponse } from './types';
 
 const API_BASE = '/api';
 
@@ -163,4 +163,21 @@ export async function fetchReadiness(params: ReadinessQuery = {}): Promise<impor
   const queryString = query.toString();
   const cacheKey = `readiness_${queryString}`;
   return fetchWithClientCache<import('./types').ReadinessResponse>(cacheKey, `${API_BASE}/progres-tier/readiness?${queryString}`, 60_000);
+}
+
+export interface CommodityDistributionQuery {
+  komoditas?: string;
+  kategori?: string;
+  provinsi?: string;
+}
+
+export async function fetchCommodityDistribution(params: CommodityDistributionQuery = {}): Promise<CommodityDistributionResponse> {
+  const query = new URLSearchParams();
+  if (params.komoditas && params.komoditas !== 'ALL') query.set('komoditas', params.komoditas);
+  if (params.kategori && params.kategori !== 'ALL') query.set('kategori', params.kategori);
+  if (params.provinsi && params.provinsi !== 'ALL') query.set('provinsi', params.provinsi);
+
+  const queryString = query.toString();
+  const cacheKey = `commodity_dist_${queryString}`;
+  return fetchWithClientCache<CommodityDistributionResponse>(cacheKey, `${API_BASE}/commodities/distribution?${queryString}`, 180_000);
 }

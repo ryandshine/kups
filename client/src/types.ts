@@ -228,3 +228,52 @@ export interface ReadinessResponse {
     totalPages: number;
   };
 }
+
+export interface CommodityProvinceStat {
+  provinsi: string;
+  normalized_name: string;
+  total_nilai: number;
+  transaksi_count: number;
+  lembaga_count: number;
+  percentage: number;
+  rank: number;
+}
+
+export interface CommodityProducerItem {
+  nama_lembaga: string;
+  kups_nama: string;
+  provinsi: string;
+  kabupaten: string;
+  produk: string;
+  total_nilai: number;
+}
+
+export interface CommodityCategoryStat {
+  kategori_komoditas: string;
+  total_nilai: number;
+  transaksi_count: number;
+  komoditas_count: number;
+}
+
+export interface TopCommodityStat {
+  komoditas: string;
+  kategori_komoditas: string;
+  total_nilai: number;
+  transaksi_count: number;
+  provinsi_count: number;
+}
+
+export interface CommodityDistributionResponse {
+  summary: {
+    komoditas: string;
+    kategori: string;
+    total_nilai: number;
+    transaksi_count: number;
+    provinsi_count: number;
+    lembaga_count: number;
+  };
+  provinces: CommodityProvinceStat[];
+  top_producers: CommodityProducerItem[];
+  categories: CommodityCategoryStat[];
+  top_commodities: TopCommodityStat[];
+}
