@@ -268,7 +268,8 @@ export const PetaSebaranView: React.FC = () => {
           const nilaiVal = props.total_nilai_ekonomi || 0;
           const shortName = PROVINCE_SHORT_NAMES[provName] || provName.replace('Provinsi ', '').trim();
 
-          if (showLabels) {
+          const hasData = activeMetric === 'nilai' ? nilaiVal > 0 : kupsVal > 0;
+          if (showLabels && hasData) {
             const tooltipHtml = activeMetric === 'nilai' ? `
               <div style="text-align: center; pointer-events: none; user-select: none;">
                 <div style="font-size: 8.5px; font-weight: 700; color: #E7E5E4; text-transform: uppercase;">${shortName}</div>
@@ -375,17 +376,12 @@ export const PetaSebaranView: React.FC = () => {
           const rank = pStat?.rank;
           const shortName = PROVINCE_SHORT_NAMES[provName] || provName.replace('Provinsi ', '').trim();
 
-          if (showLabels) {
-            const tooltipHtml = comVal > 0 ? `
+          if (showLabels && comVal > 0) {
+            const tooltipHtml = `
               <div style="text-align: center; pointer-events: none; user-select: none;">
                 <div style="font-size: 8.5px; font-weight: 700; color: #E7E5E4; text-transform: uppercase;">${shortName}</div>
                 <div style="font-size: 11px; font-weight: 800; color: #FCD34D; font-family: monospace;">${formatRupiahShort(comVal)}</div>
                 <div style="font-size: 8.5px; color: #86EFAC; font-family: monospace;">#${rank} Sentra (${pStat?.percentage}%)</div>
-              </div>
-            ` : `
-              <div style="text-align: center; pointer-events: none; user-select: none; opacity: 0.65;">
-                <div style="font-size: 8px; color: #D6D3D1;">${shortName}</div>
-                <div style="font-size: 9px; color: #A8A29E;">-</div>
               </div>
             `;
 
