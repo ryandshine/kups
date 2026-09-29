@@ -1,29 +1,60 @@
-import { OverviewData, ProgresTierData, ProvinceStat, LeaderboardItem, CommodityItem } from './types';
+import { OverviewData, ProgresTierData, ProvinceStat, LeaderboardItem, CommodityItem, LembagaItem, LembagaDetail } from './types';
 
 const API_BASE = '/api';
 
-export async function fetchOverview(): Promise<OverviewData> {
-  const res = await fetch(`${API_BASE}/overview`);
-  if (!res.ok) throw new Error('Gagal memuat ringkasan overview');
-  return res.json();
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
 }
 
-export async function fetchProgresTier(): Promise<ProgresTierData> {
-  const res = await fetch(`${API_BASE}/progres-tier`);
-  if (!res.ok) throw new Error('Gagal memuat data progres tier');
-  return res.json();
+const clientMemoryCache = new Map<string, CacheEntry<any>>();
+const inFlightClientRequests = new Map<string, Promise<any>>();
+
+async function fetchWithClientCache<T>(key: string, url: string, ttlMs: number = 300_000): Promise<T> {
+  const now = Date.now();
+  const cached = clientMemoryCache.get(key);
+  if (cached && now - cached.timestamp < ttlMs) {
+    return cached.data;
+  }
+
+  if (inFlightClientRequests.has(key)) {
+    return inFlightClientRequests.get(key)!;
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`Permintaan gagal (${res.status} ${res.statusText})`);
+      }
+      const data = await res.json();
+      clientMemoryCache.set(key, { data, timestamp: Date.now() });
+      return data;
+    } finally {
+      inFlightClientRequests.delete(key);
+    }
+  })();
+
+  inFlightClientRequests.set(key, fetchPromise);
+  return fetchPromise;
+}
+
+export async function fetchOverview(forceRefresh = false): Promise<OverviewData> {
+  if (forceRefresh) clientMemoryCache.delete('overview');
+  return fetchWithClientCache<OverviewData>('overview', `${API_BASE}/overview`, 180_000);
+}
+
+export async function fetchProgresTier(forceRefresh = false): Promise<ProgresTierData> {
+  if (forceRefresh) clientMemoryCache.delete('progres-tier');
+  return fetchWithClientCache<ProgresTierData>('progres-tier', `${API_BASE}/progres-tier`, 180_000);
 }
 
 export async function fetchMapGeoJson(): Promise<any> {
-  const res = await fetch(`${API_BASE}/map`);
-  if (!res.ok) throw new Error('Gagal memuat peta GeoJSON');
-  return res.json();
+  return fetchWithClientCache<any>('map_geojson', `${API_BASE}/map`, 600_000);
 }
 
 export async function fetchProvinces(): Promise<ProvinceStat[]> {
-  const res = await fetch(`${API_BASE}/provinces`);
-  if (!res.ok) throw new Error('Gagal memuat data provinsi');
-  return res.json();
+  return fetchWithClientCache<ProvinceStat[]>('provinces_list', `${API_BASE}/provinces`, 600_000);
 }
 
 export interface LeaderboardQuery {
@@ -62,15 +93,13 @@ export async function fetchLeaderboard(params: LeaderboardQuery = {}): Promise<L
   if (params.page) query.set('page', params.page.toString());
   if (params.limit) query.set('limit', params.limit.toString());
 
-  const res = await fetch(`${API_BASE}/leaderboard?${query.toString()}`);
-  if (!res.ok) throw new Error('Gagal memuat leaderboard KUPS');
-  return res.json();
+  const queryString = query.toString();
+  const cacheKey = `leaderboard_${queryString}`;
+  return fetchWithClientCache<LeaderboardResponse>(cacheKey, `${API_BASE}/leaderboard?${queryString}`, 60_000);
 }
 
 export async function fetchCommodities(): Promise<CommodityItem[]> {
-  const res = await fetch(`${API_BASE}/commodities`);
-  if (!res.ok) throw new Error('Gagal memuat daftar komoditas');
-  return res.json();
+  return fetchWithClientCache<CommodityItem[]>('commodities_list', `${API_BASE}/commodities`, 300_000);
 }
 
 export interface LembagaQuery {
@@ -84,6 +113,16 @@ export interface LembagaQuery {
   limit?: number;
 }
 
+export interface LembagaResponse {
+  data: LembagaItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export async function fetchLembaga(params: LembagaQuery = {}): Promise<LembagaResponse> {
   const query = new URLSearchParams();
   if (params.search) query.set('search', params.search);
@@ -95,15 +134,14 @@ export async function fetchLembaga(params: LembagaQuery = {}): Promise<LembagaRe
   if (params.page) query.set('page', params.page.toString());
   if (params.limit) query.set('limit', params.limit.toString());
 
-  const res = await fetch(`${API_BASE}/lembaga?${query.toString()}`);
-  if (!res.ok) throw new Error('Gagal memuat data lembaga');
-  return res.json();
+  const queryString = query.toString();
+  const cacheKey = `lembaga_${queryString}`;
+  return fetchWithClientCache<LembagaResponse>(cacheKey, `${API_BASE}/lembaga?${queryString}`, 60_000);
 }
 
 export async function fetchLembagaDetail(id: string): Promise<{ data: LembagaDetail }> {
-  const res = await fetch(`${API_BASE}/lembaga/${encodeURIComponent(id)}`);
-  if (!res.ok) throw new Error('Gagal memuat detail lembaga');
-  return res.json();
+  const cacheKey = `lembaga_detail_${id}`;
+  return fetchWithClientCache<{ data: LembagaDetail }>(cacheKey, `${API_BASE}/lembaga/${encodeURIComponent(id)}`, 120_000);
 }
 
 export interface ReadinessQuery {
@@ -122,7 +160,7 @@ export async function fetchReadiness(params: ReadinessQuery = {}): Promise<impor
   if (params.page) query.set('page', params.page.toString());
   if (params.limit) query.set('limit', params.limit.toString());
 
-  const res = await fetch(`${API_BASE}/progres-tier/readiness?${query.toString()}`);
-  if (!res.ok) throw new Error('Gagal memuat matriks kesiapan kenaikan kelas');
-  return res.json();
+  const queryString = query.toString();
+  const cacheKey = `readiness_${queryString}`;
+  return fetchWithClientCache<import('./types').ReadinessResponse>(cacheKey, `${API_BASE}/progres-tier/readiness?${queryString}`, 60_000);
 }

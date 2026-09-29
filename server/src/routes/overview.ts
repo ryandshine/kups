@@ -6,7 +6,7 @@ export const overviewRouter = Router();
 
 overviewRouter.get('/', async (_req: Request, res: Response) => {
   try {
-    const data = await getOrSetCache('overview_national', 60, async () => {
+    const data = await getOrSetCache('overview_national', 300, async () => {
       // 1. KPI
       const kpiRes = await pool.query(`
         SELECT 
@@ -78,26 +78,39 @@ overviewRouter.get('/', async (_req: Request, res: Response) => {
         total_nilai: parseInt(r.total_nilai, 10),
       }));
 
-      // 4. Top 5 Leaderboard
+      // 4. Top 5 Leaderboard (Optimized CTE avoiding nested loop)
       const topLeadRes = await pool.query(`
+        WITH top_prod AS (
+          SELECT 
+            p.kps_id,
+            p.kups_nama,
+            p.kups_detail_id,
+            SUM(p.nilai_ekonomi_rupiah) as total_nilai,
+            COUNT(p.id) as transaksi_count,
+            STRING_AGG(DISTINCT p.komoditas, ', ') as komoditas_list,
+            STRING_AGG(DISTINCT p.kategori_komoditas, ', ') as kategori_list
+          FROM kps_production_records p
+          WHERE p.nilai_ekonomi_rupiah > 0
+          GROUP BY p.kps_id, p.kups_nama, p.kups_detail_id
+          ORDER BY total_nilai DESC
+          LIMIT 5
+        )
         SELECT 
-          p.kups_nama,
+          tp.kups_nama,
           k.nama_lembaga,
           k.provinsi,
           k.kabupaten,
           k.skema,
-          COALESCE(MAX(ku.kelas), 'EMAS') as kelas,
-          SUM(p.nilai_ekonomi_rupiah) as total_nilai,
-          COUNT(p.id) as transaksi_count,
-          STRING_AGG(DISTINCT p.komoditas, ', ') as komoditas_list,
-          STRING_AGG(DISTINCT p.kategori_komoditas, ', ') as kategori_list
-        FROM kps_production_records p
-        JOIN kps_records k ON p.kps_id = k.id
-        LEFT JOIN kups_records ku ON (p.kups_detail_id IS NOT NULL AND ku.source_payload->>'detail_id' = p.kups_detail_id) OR (p.kps_id = ku.lembaga_id AND LOWER(TRIM(p.kups_nama)) = LOWER(TRIM(ku.nama_kups)))
-        WHERE p.nilai_ekonomi_rupiah > 0
-        GROUP BY p.kups_nama, k.nama_lembaga, k.provinsi, k.kabupaten, k.skema
-        ORDER BY total_nilai DESC
-        LIMIT 5
+          COALESCE(ku1.kelas, ku2.kelas, 'EMAS') as kelas,
+          tp.total_nilai,
+          tp.transaksi_count,
+          tp.komoditas_list,
+          tp.kategori_list
+        FROM top_prod tp
+        JOIN kps_records k ON tp.kps_id = k.id
+        LEFT JOIN kups_records ku1 ON ku1.source_payload->>'detail_id' = tp.kups_detail_id
+        LEFT JOIN kups_records ku2 ON ku1.id IS NULL AND tp.kps_id = ku2.lembaga_id AND LOWER(TRIM(tp.kups_nama)) = LOWER(TRIM(ku2.nama_kups))
+        ORDER BY tp.total_nilai DESC
       `);
 
       const topLeaderboard = topLeadRes.rows.map((r) => ({

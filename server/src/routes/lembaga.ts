@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { pool } from '../db.js';
+import { getOrSetCache } from '../cache.js';
 
 export const lembagaRouter = Router();
 
@@ -21,8 +22,11 @@ lembagaRouter.get('/', async (req: Request, res: Response) => {
     const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 15));
     const offset = (pageNum - 1) * limitNum;
 
-    const whereConditions: string[] = [];
-    const params: any[] = [];
+    const cacheKey = `lembaga_list_${search || ''}_${provinsi || ''}_${skema || ''}_${kelas || ''}_${sortBy}_${sortOrder}_${pageNum}_${limitNum}`;
+
+    const responseData = await getOrSetCache(cacheKey, 120, async () => {
+      const whereConditions: string[] = [];
+      const params: any[] = [];
     let pIdx = 1;
 
     // Filter Provinsi
@@ -197,7 +201,7 @@ lembagaRouter.get('/', async (req: Request, res: Response) => {
       })),
     }));
 
-    res.json({
+    return {
       data,
       meta: {
         total,
@@ -205,7 +209,10 @@ lembagaRouter.get('/', async (req: Request, res: Response) => {
         limit: limitNum,
         totalPages: Math.ceil(total / limitNum) || 1,
       },
-    });
+    };
+  });
+
+  res.json(responseData);
   } catch (error: any) {
     console.error('[API Lembaga Error]:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });

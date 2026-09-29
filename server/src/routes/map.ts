@@ -7,23 +7,44 @@ export const mapRouter = Router();
 
 mapRouter.get('/', async (_req: Request, res: Response) => {
   try {
-    const data = await getOrSetCache('map_enriched_geojson', 180, async () => {
-      // 1. Get stats per province
+    const data = await getOrSetCache('map_enriched_geojson', 600, async () => {
+      // 1. Get stats per province (Optimized CTE avoiding Cartesian product)
       const provRes = await pool.query(`
+        WITH kups_agg AS (
+          SELECT 
+            k.provinsi,
+            COUNT(ku.id) as total_kups,
+            COUNT(CASE WHEN ku.kelas = 'BIRU' THEN 1 END) as count_biru,
+            COUNT(CASE WHEN ku.kelas = 'PERAK' THEN 1 END) as count_perak,
+            COUNT(CASE WHEN ku.kelas = 'EMAS' THEN 1 END) as count_emas,
+            COUNT(CASE WHEN ku.kelas = 'PLATINUM' THEN 1 END) as count_platinum
+          FROM kps_records k
+          JOIN kups_records ku ON ku.lembaga_id = k.id
+          WHERE k.provinsi <> ''
+          GROUP BY k.provinsi
+        ),
+        prod_agg AS (
+          SELECT 
+            k.provinsi,
+            COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai_ekonomi,
+            COUNT(DISTINCT p.komoditas) as total_komoditas
+          FROM kps_records k
+          JOIN kps_production_records p ON p.kps_id = k.id
+          WHERE k.provinsi <> ''
+          GROUP BY k.provinsi
+        )
         SELECT 
           k.provinsi,
-          COUNT(DISTINCT ku.id) as total_kups,
-          COUNT(DISTINCT CASE WHEN ku.kelas = 'BIRU' THEN ku.id END) as count_biru,
-          COUNT(DISTINCT CASE WHEN ku.kelas = 'PERAK' THEN ku.id END) as count_perak,
-          COUNT(DISTINCT CASE WHEN ku.kelas = 'EMAS' THEN ku.id END) as count_emas,
-          COUNT(DISTINCT CASE WHEN ku.kelas = 'PLATINUM' THEN ku.id END) as count_platinum,
-          COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai_ekonomi,
-          COUNT(DISTINCT p.komoditas) as total_komoditas
-        FROM kps_records k
-        LEFT JOIN kups_records ku ON ku.lembaga_id = k.id
-        LEFT JOIN kps_production_records p ON p.kps_id = k.id
-        WHERE k.provinsi <> ''
-        GROUP BY k.provinsi
+          COALESCE(ka.total_kups, 0) as total_kups,
+          COALESCE(ka.count_biru, 0) as count_biru,
+          COALESCE(ka.count_perak, 0) as count_perak,
+          COALESCE(ka.count_emas, 0) as count_emas,
+          COALESCE(ka.count_platinum, 0) as count_platinum,
+          COALESCE(pa.total_nilai_ekonomi, 0) as total_nilai_ekonomi,
+          COALESCE(pa.total_komoditas, 0) as total_komoditas
+        FROM (SELECT DISTINCT provinsi FROM kps_records WHERE provinsi <> '') k
+        LEFT JOIN kups_agg ka ON ka.provinsi = k.provinsi
+        LEFT JOIN prod_agg pa ON pa.provinsi = k.provinsi
       `);
 
       // 2. Get top commodities per province

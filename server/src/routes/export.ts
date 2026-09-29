@@ -6,20 +6,41 @@ export const exportRouter = Router();
 exportRouter.get('/progres-tier.csv', async (_req: Request, res: Response) => {
   try {
     const provRes = await pool.query(`
+      WITH kups_agg AS (
+        SELECT 
+          k.provinsi,
+          COUNT(ku.id) as total_kups,
+          COUNT(CASE WHEN ku.kelas = 'BIRU' THEN 1 END) as count_biru,
+          COUNT(CASE WHEN ku.kelas = 'PERAK' THEN 1 END) as count_perak,
+          COUNT(CASE WHEN ku.kelas = 'EMAS' THEN 1 END) as count_emas,
+          COUNT(CASE WHEN ku.kelas = 'PLATINUM' THEN 1 END) as count_platinum
+        FROM kps_records k
+        JOIN kups_records ku ON ku.lembaga_id = k.id
+        WHERE k.provinsi <> ''
+        GROUP BY k.provinsi
+      ),
+      prod_agg AS (
+        SELECT 
+          k.provinsi,
+          COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai_ekonomi,
+          COUNT(DISTINCT p.komoditas) as total_komoditas
+        FROM kps_records k
+        JOIN kps_production_records p ON p.kps_id = k.id
+        WHERE k.provinsi <> ''
+        GROUP BY k.provinsi
+      )
       SELECT 
         k.provinsi,
-        COUNT(DISTINCT ku.id) as total_kups,
-        COUNT(DISTINCT CASE WHEN ku.kelas = 'BIRU' THEN ku.id END) as count_biru,
-        COUNT(DISTINCT CASE WHEN ku.kelas = 'PERAK' THEN ku.id END) as count_perak,
-        COUNT(DISTINCT CASE WHEN ku.kelas = 'EMAS' THEN ku.id END) as count_emas,
-        COUNT(DISTINCT CASE WHEN ku.kelas = 'PLATINUM' THEN ku.id END) as count_platinum,
-        COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai_ekonomi,
-        COUNT(DISTINCT p.komoditas) as total_komoditas
-      FROM kps_records k
-      LEFT JOIN kups_records ku ON ku.lembaga_id = k.id
-      LEFT JOIN kps_production_records p ON p.kps_id = k.id
-      WHERE k.provinsi <> ''
-      GROUP BY k.provinsi
+        COALESCE(ka.total_kups, 0) as total_kups,
+        COALESCE(ka.count_biru, 0) as count_biru,
+        COALESCE(ka.count_perak, 0) as count_perak,
+        COALESCE(ka.count_emas, 0) as count_emas,
+        COALESCE(ka.count_platinum, 0) as count_platinum,
+        COALESCE(pa.total_nilai_ekonomi, 0) as total_nilai_ekonomi,
+        COALESCE(pa.total_komoditas, 0) as total_komoditas
+      FROM (SELECT DISTINCT provinsi FROM kps_records WHERE provinsi <> '') k
+      LEFT JOIN kups_agg ka ON ka.provinsi = k.provinsi
+      LEFT JOIN prod_agg pa ON pa.provinsi = k.provinsi
       ORDER BY total_kups DESC
     `);
 
@@ -74,7 +95,7 @@ exportRouter.get('/leaderboard.csv', async (req: Request, res: Response) => {
 
     let havingClause = '';
     if (kelas && typeof kelas === 'string' && kelas.trim() !== '') {
-      havingClause = `HAVING COALESCE(MAX(ku.kelas), 'EMAS') = $${pIdx}`;
+      havingClause = `HAVING COALESCE(MAX(COALESCE(ku1.kelas, ku2.kelas)), 'EMAS') = $${pIdx}`;
       params.push(kelas.trim().toUpperCase());
       pIdx++;
     }
@@ -88,14 +109,15 @@ exportRouter.get('/leaderboard.csv', async (req: Request, res: Response) => {
         k.provinsi,
         k.kabupaten,
         k.skema,
-        COALESCE(MAX(ku.kelas), 'EMAS') as kelas,
+        COALESCE(MAX(COALESCE(ku1.kelas, ku2.kelas)), 'EMAS') as kelas,
         SUM(p.nilai_ekonomi_rupiah) as total_nilai,
         COUNT(p.id) as transaksi_count,
         STRING_AGG(DISTINCT p.komoditas, '; ') as komoditas_list,
         STRING_AGG(DISTINCT p.kategori_komoditas, '; ') as kategori_list
       FROM kps_production_records p
       JOIN kps_records k ON p.kps_id = k.id
-      LEFT JOIN kups_records ku ON (p.kups_detail_id IS NOT NULL AND ku.source_payload->>'detail_id' = p.kups_detail_id) OR (p.kps_id = ku.lembaga_id AND LOWER(TRIM(p.kups_nama)) = LOWER(TRIM(ku.nama_kups)))
+      LEFT JOIN kups_records ku1 ON ku1.source_payload->>'detail_id' = p.kups_detail_id
+      LEFT JOIN kups_records ku2 ON ku1.id IS NULL AND p.kps_id = ku2.lembaga_id AND LOWER(TRIM(p.kups_nama)) = LOWER(TRIM(ku2.nama_kups))
       ${whereClause}
       GROUP BY p.kups_nama, k.nama_lembaga, k.provinsi, k.kabupaten, k.skema
       ${havingClause}
