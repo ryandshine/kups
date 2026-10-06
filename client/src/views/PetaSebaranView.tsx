@@ -221,6 +221,7 @@ export const PetaSebaranView: React.FC = () => {
       maxZoom: 9,
       zoomControl: true,
       attributionControl: false,
+      scrollWheelZoom: false,
     });
 
     mapInstanceRef.current = map;
@@ -717,7 +718,7 @@ export const PetaSebaranView: React.FC = () => {
           </div>
 
           {/* Leaflet Canvas */}
-          <div className="relative h-[520px] sm:h-[620px] w-full bg-[#EAE4D7]">
+          <div className="relative z-0 isolate h-[520px] sm:h-[620px] w-full bg-[#EAE4D7] overflow-hidden">
             {(loading || loadingCommodity) && (
               <div className="absolute inset-0 bg-earth-sand/80 flex items-center justify-center z-[1000]">
                 <div className="p-4 bg-white border border-earth-clay text-earth-soil text-xs font-mono flex items-center space-x-2">
@@ -726,7 +727,7 @@ export const PetaSebaranView: React.FC = () => {
                 </div>
               </div>
             )}
-            <div ref={mapContainerRef} className="h-full w-full" />
+            <div ref={mapContainerRef} className="h-full w-full relative z-0" />
           </div>
 
           {/* Choropleth Legend */}

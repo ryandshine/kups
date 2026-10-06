@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
   };
 
   return (
-    <header className="bg-earth-soil text-earth-sand border-b-2 border-earth-terracotta sticky top-0 z-50">
+    <header className="bg-earth-soil text-earth-sand border-b-2 border-earth-terracotta sticky top-0 z-[1000]">
       {/* Top Ministry Banner */}
       <div className="bg-earth-forest-dark border-b border-earth-forest text-xs py-1.5 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">

@@ -70,7 +70,7 @@ export const LembagaModal: React.FC<LembagaModalProps> = ({ lembagaId, onClose }
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
       {/* Modal Container */}
       <div className="bg-white border-2 border-earth-soil w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden relative">
         {/* Top Header Bar */}

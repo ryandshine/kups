@@ -37,6 +37,8 @@ body {
 .leaflet-container {
   background: #E8E2D4 !important;
   font-family: inherit;
+  z-index: 0 !important;
+  isolation: isolate !important;
 }
 
 .leaflet-popup-content-wrapper {
