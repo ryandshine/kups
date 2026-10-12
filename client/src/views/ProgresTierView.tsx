@@ -150,6 +150,9 @@ export const ProgresTierView: React.FC = () => {
   const { summary, criteria15, bottlenecks } = data;
   const filteredCriteria = criteria15.filter((c) => c.tier === activeTab);
   const pipelineStats = readinessData?.pipelineStats;
+  // Statistik pipeline hanya tampil bila data sudah dimuat; nilai 0 asli tetap tampil sebagai 0.
+  const fmtStat = (v?: number) => (v === undefined ? '—' : formatNumber(v));
+  const fmtRatio = (a?: number, b?: number) => (a === undefined || !b ? '—' : formatPercent((a / b) * 100));
 
   const exportReadinessUrl = `/api/export/readiness.csv?targetTier=${targetTier}&provinsi=${encodeURIComponent(readinessProvinsi)}&search=${encodeURIComponent(readinessSearch)}`;
 
@@ -313,7 +316,7 @@ export const ProgresTierView: React.FC = () => {
 
               <div className="mt-4">
                 <div className="text-2xl font-extrabold font-mono text-blue-900">
-                  {formatNumber(pipelineStats?.biru_to_perak.sangat_siap || 504)}
+                  {fmtStat(pipelineStats?.biru_to_perak.sangat_siap)}
                 </div>
                 <div className="text-xs font-bold text-earth-soil mt-0.5">
                   KUPS Biru Sangat Siap Naik ke Perak
@@ -324,9 +327,9 @@ export const ProgresTierView: React.FC = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-earth-sand-border flex items-center justify-between text-xs text-earth-soil-muted">
-                <span>Total Populasi Biru: {formatNumber(pipelineStats?.biru_to_perak.total || 8562)}</span>
+                <span>Total Populasi Biru: {fmtStat(pipelineStats?.biru_to_perak.total)}</span>
                 <span className="font-bold text-blue-800">
-                  {formatPercent((pipelineStats?.biru_to_perak.sangat_siap || 504) / (pipelineStats?.biru_to_perak.total || 8562) * 100)} Siap
+                  {fmtRatio(pipelineStats?.biru_to_perak.sangat_siap, pipelineStats?.biru_to_perak.total)} Siap
                 </span>
               </div>
             </div>
@@ -351,7 +354,7 @@ export const ProgresTierView: React.FC = () => {
 
               <div className="mt-4">
                 <div className="text-2xl font-extrabold font-mono text-amber-900">
-                  {formatNumber(pipelineStats?.perak_to_emas.sangat_siap || 1047)}
+                  {fmtStat(pipelineStats?.perak_to_emas.sangat_siap)}
                 </div>
                 <div className="text-xs font-bold text-earth-soil mt-0.5">
                   KUPS Perak Sangat Siap Naik ke Emas
@@ -362,9 +365,9 @@ export const ProgresTierView: React.FC = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-earth-sand-border flex items-center justify-between text-xs text-earth-soil-muted">
-                <span>Total Populasi Perak: {formatNumber(pipelineStats?.perak_to_emas.total || 6469)}</span>
+                <span>Total Populasi Perak: {fmtStat(pipelineStats?.perak_to_emas.total)}</span>
                 <span className="font-bold text-amber-800">
-                  {formatPercent((pipelineStats?.perak_to_emas.sangat_siap || 1047) / (pipelineStats?.perak_to_emas.total || 6469) * 100)} Siap
+                  {fmtRatio(pipelineStats?.perak_to_emas.sangat_siap, pipelineStats?.perak_to_emas.total)} Siap
                 </span>
               </div>
             </div>
@@ -389,7 +392,7 @@ export const ProgresTierView: React.FC = () => {
 
               <div className="mt-4">
                 <div className="text-2xl font-extrabold font-mono text-emerald-950">
-                  {formatNumber(pipelineStats?.emas_to_platinum.kandidat_audit || 555)}
+                  {fmtStat(pipelineStats?.emas_to_platinum.kandidat_audit)}
                 </div>
                 <div className="text-xs font-bold text-earth-soil mt-0.5">
                   Kandidat Audit Faktual PLATINUM
@@ -400,9 +403,9 @@ export const ProgresTierView: React.FC = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-earth-sand-border flex items-center justify-between text-xs text-earth-soil-muted">
-                <span>Total Populasi Emas: {formatNumber(pipelineStats?.emas_to_platinum.total || 1648)}</span>
+                <span>Total Populasi Emas: {fmtStat(pipelineStats?.emas_to_platinum.total)}</span>
                 <span className="font-bold text-emerald-800">
-                  {formatPercent((pipelineStats?.emas_to_platinum.kandidat_audit || 555) / (pipelineStats?.emas_to_platinum.total || 1648) * 100)} Layak
+                  {fmtRatio(pipelineStats?.emas_to_platinum.kandidat_audit, pipelineStats?.emas_to_platinum.total)} Layak
                 </span>
               </div>
             </div>
