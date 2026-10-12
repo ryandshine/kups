@@ -152,6 +152,6 @@ leaderboardRouter.get('/', async (req: Request, res: Response) => {
     res.json(responseData);
   } catch (error: any) {
     console.error('[API Leaderboard Error]:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });

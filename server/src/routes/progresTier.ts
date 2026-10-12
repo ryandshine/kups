@@ -130,7 +130,7 @@ progresTierRouter.get('/', async (_req: Request, res: Response) => {
     res.json(data);
   } catch (error: any) {
     console.error('[API Progres Tier Error]:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -138,12 +138,17 @@ progresTierRouter.get('/', async (_req: Request, res: Response) => {
 progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
   try {
     const {
-      targetTier = 'PERAK', // 'PERAK' | 'EMAS' | 'PLATINUM' | 'ALL'
+      targetTier: targetTierRaw = 'PERAK', // 'PERAK' | 'EMAS' | 'PLATINUM' | 'ALL'
       provinsi,
       search,
       page = '1',
       limit = '15',
     } = req.query;
+
+    if (typeof targetTierRaw !== 'string' || !['PERAK', 'EMAS', 'PLATINUM', 'ALL'].includes(targetTierRaw)) {
+      return res.status(400).json({ error: 'Parameter targetTier tidak valid' });
+    }
+    const targetTier = targetTierRaw;
 
     const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 15));
@@ -439,6 +444,6 @@ progresTierRouter.get('/readiness', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('[API Readiness Error]:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });

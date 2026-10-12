@@ -126,6 +126,6 @@ mapRouter.get('/', async (_req: Request, res: Response) => {
     res.json(data);
   } catch (error: any) {
     console.error('[API Map Error]:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });

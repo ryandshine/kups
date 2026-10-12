@@ -32,7 +32,7 @@ commoditiesRouter.get('/', async (_req: Request, res: Response) => {
     res.json(list);
   } catch (error: any) {
     console.error('[API Commodities Error]:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -197,6 +197,6 @@ commoditiesRouter.get('/distribution', async (req: Request, res: Response) => {
     res.json(result);
   } catch (error: any) {
     console.error('[API Commodity Distribution Error]:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -5,8 +5,26 @@ interface CacheEntry<T> {
   isFetching?: boolean;
 }
 
+const MAX_CACHE_ENTRIES = 500;
+
 const memoryCache = new Map<string, CacheEntry<any>>();
 const inFlightRequests = new Map<string, Promise<any>>();
+
+/** Simpan entri dan jaga ukuran cache: buang entri kedaluwarsa, lalu yang tertua. */
+function setEntry<T>(key: string, entry: CacheEntry<T>): void {
+  memoryCache.delete(key); // perbarui urutan sisip agar entri aktif dianggap terbaru
+  memoryCache.set(key, entry);
+  if (memoryCache.size <= MAX_CACHE_ENTRIES) return;
+
+  const now = Date.now();
+  for (const [k, v] of memoryCache) {
+    if (v.staleUntil <= now) memoryCache.delete(k);
+  }
+  for (const k of memoryCache.keys()) {
+    if (memoryCache.size <= MAX_CACHE_ENTRIES) break;
+    memoryCache.delete(k);
+  }
+}
 
 /**
  * Get or set cache with Stale-While-Revalidate (SWR) and in-flight promise deduplication.
@@ -36,7 +54,7 @@ export async function getOrSetCache<T>(
       entry.isFetching = true;
       const refreshPromise = fetcher()
         .then((fresh) => {
-          memoryCache.set(key, {
+          setEntry(key, {
             data: fresh,
             expiresAt: Date.now() + ttlSeconds * 1000,
             staleUntil: Date.now() + ttlSeconds * 1000 + swrDuration,
@@ -67,7 +85,7 @@ export async function getOrSetCache<T>(
     try {
       const fresh = await fetcher();
       const currentNow = Date.now();
-      memoryCache.set(key, {
+      setEntry(key, {
         data: fresh,
         expiresAt: currentNow + ttlSeconds * 1000,
         staleUntil: currentNow + ttlSeconds * 1000 + swrDuration,

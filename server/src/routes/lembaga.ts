@@ -215,14 +215,17 @@ lembagaRouter.get('/', async (req: Request, res: Response) => {
   res.json(responseData);
   } catch (error: any) {
     console.error('[API Lembaga Error]:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // GET /api/lembaga/:id - Detail of a single Lembaga with full KUPS & products
 lembagaRouter.get('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) {
+      return res.status(404).json({ error: 'Lembaga tidak ditemukan' });
+    }
 
     // 1. Fetch Lembaga (KPS) info
     const kpsRes = await pool.query(`
@@ -338,7 +341,11 @@ lembagaRouter.get('/:id', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
+    // 22P02: format id tidak cocok dengan tipe kolom (mis. teks pada kolom numerik)
+    if (error?.code === '22P02') {
+      return res.status(404).json({ error: 'Lembaga tidak ditemukan' });
+    }
     console.error('[API Lembaga Detail Error]:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });

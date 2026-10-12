@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { pool } from '../db.js';
+import { csvCell } from '../utils/csv.js';
 
 export const exportRouter = Router();
 
@@ -50,7 +51,7 @@ exportRouter.get('/progres-tier.csv', async (_req: Request, res: Response) => {
     let csv = 'Provinsi,Total KUPS,Biru,Perak,Emas,Platinum,Total Nilai Ekonomi (Rp),Jumlah Komoditas\n';
 
     for (const r of provRes.rows) {
-      const p = `"${r.provinsi.replace(/"/g, '""')}"`;
+      const p = csvCell(r.provinsi);
       csv += `${p},${r.total_kups},${r.count_biru},${r.count_perak},${r.count_emas},${r.count_platinum},${r.total_nilai_ekonomi},${r.total_komoditas}\n`;
     }
 
@@ -134,13 +135,13 @@ exportRouter.get('/leaderboard.csv', async (req: Request, res: Response) => {
 
     let rank = 1;
     for (const r of dataRes.rows) {
-      const kups = `"${(r.kups_nama || '').replace(/"/g, '""')}"`;
-      const lembaga = `"${(r.nama_lembaga || '').replace(/"/g, '""')}"`;
-      const prov = `"${(r.provinsi || '').replace(/"/g, '""')}"`;
-      const kab = `"${(r.kabupaten || '').replace(/"/g, '""')}"`;
-      const skemaVal = `"${(r.skema || '').replace(/"/g, '""')}"`;
-      const komoditasVal = `"${(r.komoditas_list || '').replace(/"/g, '""')}"`;
-      const kategoriVal = `"${(r.kategori_list || '').replace(/"/g, '""')}"`;
+      const kups = csvCell(r.kups_nama);
+      const lembaga = csvCell(r.nama_lembaga);
+      const prov = csvCell(r.provinsi);
+      const kab = csvCell(r.kabupaten);
+      const skemaVal = csvCell(r.skema);
+      const komoditasVal = csvCell(r.komoditas_list);
+      const kategoriVal = csvCell(r.kategori_list);
 
       csv += `${rank},${kups},${lembaga},${prov},${kab},${skemaVal},${r.kelas},${r.total_nilai},${r.transaksi_count},${komoditasVal},${kategoriVal}\n`;
       rank++;
@@ -233,7 +234,7 @@ exportRouter.get('/lembaga.csv', async (req: Request, res: Response) => {
     let csv = 'Nama Lembaga,Nomor SK,Skema PS,Luas (Ha),Provinsi,Kabupaten,Kecamatan,Desa,Nama Balai,Nama Ketua,Total Anggota,Jumlah KUPS,Daftar KUPS Binaan,Total Nilai Ekonomi (Rp),Jumlah Transaksi\n';
 
     for (const r of result.rows) {
-      const escape = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`;
+      const escape = csvCell;
       csv += `${escape(r.nama_lembaga)},${escape(r.surat_keputusan)},${escape(r.skema)},${r.luas_total || 0},${escape(r.provinsi)},${escape(r.kabupaten)},${escape(r.kecamatan)},${escape(r.desa)},${escape(r.nama_balai)},${escape(r.nama_ketua)},${r.total_anggota},${r.jumlah_kups},${escape(r.kups_list)},${r.total_nilai},${r.total_transaksi}\n`;
     }
 
@@ -244,9 +245,15 @@ exportRouter.get('/lembaga.csv', async (req: Request, res: Response) => {
   }
 });
 
+const VALID_TARGET_TIERS = ['PERAK', 'EMAS', 'PLATINUM', 'ALL'];
+
 exportRouter.get('/readiness.csv', async (req: Request, res: Response) => {
   try {
-    const { targetTier = 'PERAK', provinsi, search } = req.query;
+    const { provinsi, search } = req.query;
+    const targetTier = req.query.targetTier ?? 'PERAK';
+    if (typeof targetTier !== 'string' || !VALID_TARGET_TIERS.includes(targetTier)) {
+      return res.status(400).send('Parameter targetTier tidak valid');
+    }
 
     const whereConditions: string[] = [];
     const params: any[] = [];
@@ -318,13 +325,13 @@ exportRouter.get('/readiness.csv', async (req: Request, res: Response) => {
     const dataRes = await pool.query(dataSql, params);
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="nominasi-kups-siap-naik-kelas-${targetTier.toString().toLowerCase()}.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="nominasi-kups-siap-naik-kelas-${targetTier.toLowerCase()}.csv"`);
 
     let csv = 'Rank,Nama KUPS,Kelas Saat Ini,Target Usulan,Skor Kesiapan,SK Penetapan KUPS,Nama Lembaga Induk,SK Lembaga KPS,Status RKPS,Provinsi,Kabupaten,Balai PS,Skema PS,Total Nilai Ekonomi (Rp),Jumlah Transaksi,Komoditas,Jumlah Produk,Jumlah Potensi,Rekomendasi Aksi\n';
 
     let rank = 1;
     for (const r of dataRes.rows) {
-      const escape = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`;
+      const escape = csvCell;
       const target = r.kelas_sekarang === 'BIRU' ? 'PERAK' : r.kelas_sekarang === 'PERAK' ? 'EMAS' : 'PLATINUM';
       const hasSkKups = Boolean(r.sk_kups);
       const hasProduk = (parseInt(r.produk_count, 10) || 0) > 0;

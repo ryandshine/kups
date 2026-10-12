@@ -31,6 +31,14 @@ app.use(express.json());
 
 // Pembatasan laju: umum untuk seluruh API, lebih ketat untuk unduhan CSV.
 app.use('/api', rateLimit({ windowMs: 60_000, max: 120, skip: ['/health'] }));
+
+// Tolak query yang tidak wajar panjangnya (juga membatasi ukuran kunci cache).
+app.use('/api', (req: Request, res: Response, next) => {
+  if (JSON.stringify(req.query).length > 1000) {
+    return res.status(400).json({ error: 'Parameter permintaan terlalu panjang' });
+  }
+  next();
+});
 app.use('/api/export', rateLimit({ windowMs: 60_000, max: 10 }));
 
 // API Routes
@@ -56,7 +64,8 @@ app.get('/api/provinces', async (_req: Request, res: Response) => {
     `);
     res.json(r.rows.map((row) => ({ provinsi: row.provinsi })));
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Provinces Error]:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -72,10 +81,8 @@ app.get('/api/health', async (_req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err: any) {
-    res.status(503).json({
-      status: 'unhealthy',
-      error: err.message,
-    });
+    console.error('[Health Error]:', err);
+    res.status(503).json({ status: 'unhealthy' });
   }
 });
 
