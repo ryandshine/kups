@@ -50,17 +50,18 @@ commoditiesRouter.get('/distribution', async (req: Request, res: Response) => {
       // 1. Categories Breakdown
       const catRes = await pool.query(`
         SELECT 
-          kategori_komoditas, 
-          COUNT(id) as transaksi_count, 
-          COUNT(DISTINCT komoditas) as komoditas_count, 
-          COALESCE(SUM(nilai_ekonomi_rupiah), 0) as total_nilai 
-        FROM kps_production_records 
-        WHERE komoditas IS NOT NULL AND komoditas <> ''
-        GROUP BY kategori_komoditas 
+          p.kategori_komoditas, 
+          COUNT(p.id) as transaksi_count, 
+          COUNT(DISTINCT p.komoditas) as komoditas_count, 
+          COALESCE(SUM(p.nilai_ekonomi_rupiah), 0) as total_nilai 
+        FROM kps_production_records p
+        JOIN kps_records k ON p.kps_id = k.id
+        WHERE p.komoditas IS NOT NULL AND p.komoditas <> '' AND k.provinsi <> ''
+        GROUP BY p.kategori_komoditas 
         ORDER BY total_nilai DESC
       `);
 
-      // 2. Top 30 Commodities List with metrics
+      // 2. Full commodity list with metrics (dipakai dropdown "Pilihan Lengkap")
       const topComRes = await pool.query(`
         SELECT 
           p.komoditas,
@@ -73,7 +74,16 @@ commoditiesRouter.get('/distribution', async (req: Request, res: Response) => {
         WHERE p.komoditas IS NOT NULL AND p.komoditas <> '' AND k.provinsi <> ''
         GROUP BY p.komoditas, p.kategori_komoditas
         ORDER BY total_nilai DESC
-        LIMIT 30
+      `);
+
+      // Cakupan data (dipakai UI agar tidak menulis jumlah komoditas/provinsi secara statis)
+      const coverageRes = await pool.query(`
+        SELECT
+          (SELECT COUNT(DISTINCT p.komoditas)
+             FROM kps_production_records p
+             JOIN kps_records k ON p.kps_id = k.id
+            WHERE p.komoditas IS NOT NULL AND p.komoditas <> '' AND k.provinsi <> '') as komoditas_total,
+          (SELECT COUNT(DISTINCT provinsi) FROM kps_records WHERE provinsi <> '') as provinsi_total
       `);
 
       // Build WHERE conditions for filtered queries
@@ -159,6 +169,8 @@ commoditiesRouter.get('/distribution', async (req: Request, res: Response) => {
         total_nilai: grandTotalNilai,
         transaksi_count: grandTotalTransaksi,
         provinsi_count: provRes.rows.length,
+        provinsi_total: parseInt(coverageRes.rows[0].provinsi_total, 10),
+        komoditas_total: parseInt(coverageRes.rows[0].komoditas_total, 10),
         lembaga_count: provRes.rows.reduce((sum, r) => sum + parseInt(r.lembaga_count, 10), 0),
       };
 

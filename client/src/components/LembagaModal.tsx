@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { formatNumber, formatRupiah } from '../utils/format';
 import { LembagaDetail } from '../types';
 import { fetchLembagaDetail } from '../api';
 import { TierBadge } from './TierBadge';
@@ -59,15 +60,6 @@ export const LembagaModal: React.FC<LembagaModalProps> = ({ lembagaId, onClose }
   }, [onClose]);
 
   if (!lembagaId) return null;
-
-  const formatNumber = (n: number) => new Intl.NumberFormat('id-ID').format(n || 0);
-  const formatRupiah = (val: number) => {
-    if (!val) return 'Rp 0';
-    if (val >= 1_000_000_000_000) return `Rp ${(val / 1_000_000_000_000).toFixed(2)} T`;
-    if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(2)} M`;
-    if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(2)} Jt`;
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
-  };
 
   return (
     <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 flex items-center justify-center p-3 sm:p-6 animate-fadeIn">

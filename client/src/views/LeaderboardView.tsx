@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { formatNumber, formatRupiah } from '../utils/format';
 import { LeaderboardItem, LembagaItem, ProvinceStat } from '../types';
 import { 
   fetchLeaderboard, 
@@ -164,15 +165,6 @@ export const LeaderboardView: React.FC = () => {
 
   const collapseAll = () => {
     setExpandedLembaga(new Set());
-  };
-
-  const formatNumber = (n: number) => new Intl.NumberFormat('id-ID').format(n || 0);
-  const formatRupiah = (val: number) => {
-    if (!val) return 'Rp 0';
-    if (val >= 1_000_000_000_000) return `Rp ${(val / 1_000_000_000_000).toFixed(2)} T`;
-    if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(2)} M`;
-    if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(2)} Jt`;
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
   };
 
   const exportUrlLembaga = `/api/export/lembaga.csv?search=${encodeURIComponent(search)}&provinsi=${encodeURIComponent(selectedProvinsi)}&skema=${encodeURIComponent(selectedSkema)}&kelas=${encodeURIComponent(selectedKelas)}`;

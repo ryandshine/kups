@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { formatNumber, formatRupiah } from '../utils/format';
 import { OverviewData } from '../types';
 import { fetchOverview } from '../api';
 import { StatCard } from '../components/StatCard';
@@ -37,20 +38,6 @@ export const BerandaView: React.FC<BerandaViewProps> = ({ onNavigate }) => {
       });
   }, []);
 
-  const formatRupiah = (val: number) => {
-    if (val >= 1_000_000_000_000) {
-      return `Rp ${(val / 1_000_000_000_000).toFixed(2)} T`;
-    }
-    if (val >= 1_000_000_000) {
-      return `Rp ${(val / 1_000_000_000).toFixed(2)} M`;
-    }
-    if (val >= 1_000_000) {
-      return `Rp ${(val / 1_000_000).toFixed(2)} Jt`;
-    }
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
-  };
-
-  const formatNumber = (num: number) => new Intl.NumberFormat('id-ID').format(num);
 
   if (loading) {
     return (

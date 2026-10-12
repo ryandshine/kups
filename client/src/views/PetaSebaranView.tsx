@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { fetchMapGeoJson, fetchCommodityDistribution, CommodityDistributionQuery } from '../api';
 import { CommodityDistributionResponse, CommodityProvinceStat } from '../types';
+import { formatNumber, formatRupiah, formatRupiahShort, formatPercent } from '../utils/format';
 import { 
   MapPin, 
   Layers, 
@@ -73,6 +74,45 @@ const PROVINCE_SHORT_NAMES: Record<string, string> = {
   'Papua Barat Daya': 'Papua BD',
 };
 
+// Provinsi disebut "sentra" hanya untuk N teratas pada komoditas yang dipilih.
+const SENTRA_TOP_N = 5;
+
+const CATEGORY_LABELS: Record<string, string> = {
+  'HASIL HUTAN bukan KAYU': 'HHBK',
+  'HASIL HUTAN KAYU': 'Kayu / HHK',
+  'JASA LINGKUNGAN': 'Jasling / Wisata',
+};
+
+// Skala warna komoditas (terang -> pekat). Kelas dibagi rata pada skala logaritmik
+// sehingga satu provinsi dominan tidak membuat provinsi lain berwarna sama.
+const COMMODITY_COLORS = ['#FDBA74', '#F97316', '#EA580C', '#C2410C', '#7C2D12'];
+const NO_DATA_COLOR = '#E7E0D3';
+
+interface CommodityScale {
+  min: number;
+  max: number;
+  breaks: number[]; // batas bawah kelas ke-2 dst.
+}
+
+const buildCommodityScale = (values: number[]): CommodityScale => {
+  const positive = values.filter((v) => v > 0);
+  if (positive.length === 0) return { min: 0, max: 0, breaks: [] };
+  const min = Math.min(...positive);
+  const max = Math.max(...positive);
+  if (min === max) return { min, max, breaks: [] };
+  const logMin = Math.log(min);
+  const step = (Math.log(max) - logMin) / COMMODITY_COLORS.length;
+  const breaks = COMMODITY_COLORS.slice(1).map((_, i) => Math.exp(logMin + step * (i + 1)));
+  return { min, max, breaks };
+};
+
+const commodityClassIndex = (val: number, scale: CommodityScale): number => {
+  if (scale.breaks.length === 0) return COMMODITY_COLORS.length - 1;
+  let idx = 0;
+  while (idx < scale.breaks.length && val >= scale.breaks[idx]) idx++;
+  return idx;
+};
+
 const POPULAR_COMMODITY_CHIPS = [
   'BIJI KOPI',
   'JAGUNG',
@@ -112,30 +152,12 @@ export const PetaSebaranView: React.FC = () => {
   const [commodityData, setCommodityData] = useState<CommodityDistributionResponse | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedCommodity, setSelectedCommodity] = useState<string>('BIJI KOPI');
-  const [commoditySearch, setCommoditySearch] = useState<string>('');
   const [loadingCommodity, setLoadingCommodity] = useState<boolean>(false);
   const [selectedProvinceCommodity, setSelectedProvinceCommodity] = useState<CommodityProvinceStat | null>(null);
 
   // Common Map States
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [hoveredName, setHoveredName] = useState<string | null>(null);
-
-  const formatNumber = (n: number) => new Intl.NumberFormat('id-ID').format(n || 0);
-  const formatRupiah = (val: number) => {
-    if (!val) return 'Rp 0';
-    if (val >= 1_000_000_000_000) return `Rp ${(val / 1_000_000_000_000).toFixed(2)} T`;
-    if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(2)} M`;
-    if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(2)} Jt`;
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
-  };
-
-  const formatRupiahShort = (val: number) => {
-    if (!val || val === 0) return 'Rp 0';
-    if (val >= 1_000_000_000_000) return `Rp ${(val / 1_000_000_000_000).toFixed(1)} T`;
-    if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(val >= 10_000_000_000 ? 0 : 1)} M`;
-    if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(0)} Jt`;
-    return `Rp ${(val / 1_000).toFixed(0)} Rb`;
-  };
 
   // Color scales for Wilayah Mode
   const getWilayahColor = (val: number, metric: 'nilai' | 'kups') => {
@@ -158,19 +180,28 @@ export const PetaSebaranView: React.FC = () => {
     }
   };
 
-  // Dynamic Color scales for Commodity Mode
-  const getCommodityColor = (val: number, maxVal: number) => {
-    if (!val || val <= 0) return '#E7E0D3'; // 0 production / grayed out
-    if (maxVal <= 0) return '#FDBA74';
+  // Skala warna & opsi dropdown komoditas (dihitung dari data yang sedang tampil)
+  const commodityScale = useMemo(
+    () => buildCommodityScale((commodityData?.provinces || []).map((p) => p.total_nilai)),
+    [commodityData]
+  );
 
-    const ratio = val / maxVal;
-    if (ratio >= 0.5) return '#7C2D12';  // > 50% of top producer (Deep Rust Terracotta)
-    if (ratio >= 0.2) return '#9A3412';  // 20% - 50% (Burnt Ochre)
-    if (ratio >= 0.08) return '#C2410C'; // 8% - 20% (Warm Terracotta)
-    if (ratio >= 0.02) return '#EA580C'; // 2% - 8% (Bright Terracotta)
-    if (ratio >= 0.005) return '#F97316';// 0.5% - 2% (Ochre Amber)
-    return '#FDBA74';                    // > 0% (Light Peach Amber)
+  const getCommodityColor = (val: number, scale: CommodityScale) => {
+    if (!val || val <= 0) return NO_DATA_COLOR;
+    return COMMODITY_COLORS[commodityClassIndex(val, scale)];
   };
+
+  // Daftar lengkap komoditas (digabung per nama, mengikuti kategori yang dipilih)
+  const commodityOptions = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const c of commodityData?.top_commodities || []) {
+      if (selectedCategory !== 'ALL' && c.kategori_komoditas !== selectedCategory) continue;
+      totals.set(c.komoditas, (totals.get(c.komoditas) || 0) + c.total_nilai);
+    }
+    return Array.from(totals, ([komoditas, total_nilai]) => ({ komoditas, total_nilai })).sort(
+      (x, y) => y.total_nilai - x.total_nilai
+    );
+  }, [commodityData, selectedCategory]);
 
   // Load initial Base GeoJSON
   useEffect(() => {
@@ -345,11 +376,9 @@ export const PetaSebaranView: React.FC = () => {
     } else {
       // MODE 2: Peta Sebaran Komoditas (Spasial Komoditas Terpilih)
       const provMap = new Map<string, CommodityProvinceStat>();
-      let maxVal = 0;
       if (commodityData?.provinces) {
         for (const p of commodityData.provinces) {
           provMap.set(p.normalized_name, p);
-          if (p.total_nilai > maxVal) maxVal = p.total_nilai;
         }
       }
 
@@ -361,7 +390,7 @@ export const PetaSebaranView: React.FC = () => {
           const val = pStat?.total_nilai || 0;
 
           return {
-            fillColor: getCommodityColor(val, maxVal),
+            fillColor: getCommodityColor(val, commodityScale),
             weight: val > 0 ? 1.5 : 1,
             opacity: 1,
             color: val > 0 ? '#1C1917' : '#A8A29E',
@@ -382,7 +411,7 @@ export const PetaSebaranView: React.FC = () => {
               <div style="text-align: center; pointer-events: none; user-select: none;">
                 <div style="font-size: 8.5px; font-weight: 700; color: #E7E5E4; text-transform: uppercase;">${shortName}</div>
                 <div style="font-size: 11px; font-weight: 800; color: #FCD34D; font-family: monospace;">${formatRupiahShort(comVal)}</div>
-                <div style="font-size: 8.5px; color: #86EFAC; font-family: monospace;">#${rank} Sentra (${pStat?.percentage}%)</div>
+                <div style="font-size: 8.5px; color: #86EFAC; font-family: monospace;">#${rank} &middot; ${formatPercent(pStat?.percentage || 0)}</div>
               </div>
             `;
 
@@ -442,13 +471,6 @@ export const PetaSebaranView: React.FC = () => {
     }
   };
 
-  // Filtered commodity list for the dropdown
-  const filteredCommodityList = (commodityData?.top_commodities || []).filter((c) => {
-    if (selectedCategory !== 'ALL' && c.kategori_komoditas !== selectedCategory) return false;
-    if (commoditySearch && !c.komoditas.toLowerCase().includes(commoditySearch.toLowerCase())) return false;
-    return true;
-  });
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
       {/* Top Header Card */}
@@ -463,7 +485,10 @@ export const PetaSebaranView: React.FC = () => {
             <span>Peta Spasial Sebaran Komoditas & Nilai Ekonomi</span>
           </h1>
           <p className="text-xs text-earth-soil-muted mt-1 max-w-3xl leading-relaxed">
-            Eksplorasi spasial interaktif sebaran 170 komoditas unggulan (HHBK, Kayu, Jasa Lingkungan) dan pemantauan sentra produksi perhutanan sosial di 38 provinsi Indonesia.
+            Eksplorasi spasial interaktif sebaran{' '}
+            {commodityData ? `${formatNumber(commodityData.summary.komoditas_total)} komoditas` : 'komoditas'} perhutanan sosial
+            (HHBK, Kayu, Jasa Lingkungan) berdasarkan nilai transaksi yang tercatat, di{' '}
+            {commodityData ? `${formatNumber(commodityData.summary.provinsi_total)} provinsi` : 'seluruh provinsi'} Indonesia.
           </p>
         </div>
 
@@ -519,38 +544,23 @@ export const PetaSebaranView: React.FC = () => {
                     : 'border-earth-sand-border bg-earth-sand-surface text-earth-soil hover:border-earth-terracotta'
                 }`}
               >
-                Semua Kategori (170)
+                Semua Kategori{commodityData ? ` (${formatNumber(commodityData.summary.komoditas_total)} komoditas)` : ''}
               </button>
-              <button
-                onClick={() => setSelectedCategory('HASIL HUTAN bukan KAYU')}
-                className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
-                  selectedCategory === 'HASIL HUTAN bukan KAYU'
-                    ? 'border-earth-terracotta bg-earth-terracotta text-white'
-                    : 'border-earth-sand-border bg-earth-sand-surface text-earth-soil hover:border-earth-terracotta'
-                }`}
-              >
-                HHBK (Rp 5,85 T)
-              </button>
-              <button
-                onClick={() => setSelectedCategory('HASIL HUTAN KAYU')}
-                className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
-                  selectedCategory === 'HASIL HUTAN KAYU'
-                    ? 'border-earth-terracotta bg-earth-terracotta text-white'
-                    : 'border-earth-sand-border bg-earth-sand-surface text-earth-soil hover:border-earth-terracotta'
-                }`}
-              >
-                Kayu / HHK (Rp 97,3 M)
-              </button>
-              <button
-                onClick={() => setSelectedCategory('JASA LINGKUNGAN')}
-                className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
-                  selectedCategory === 'JASA LINGKUNGAN'
-                    ? 'border-earth-terracotta bg-earth-terracotta text-white'
-                    : 'border-earth-sand-border bg-earth-sand-surface text-earth-soil hover:border-earth-terracotta'
-                }`}
-              >
-                Jasling / Wisata (Rp 80,4 M)
-              </button>
+              {(commodityData?.categories || [])
+                .filter((c) => c.kategori_komoditas)
+                .map((c) => (
+                  <button
+                    key={c.kategori_komoditas}
+                    onClick={() => setSelectedCategory(c.kategori_komoditas)}
+                    className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
+                      selectedCategory === c.kategori_komoditas
+                        ? 'border-earth-terracotta bg-earth-terracotta text-white'
+                        : 'border-earth-sand-border bg-earth-sand-surface text-earth-soil hover:border-earth-terracotta'
+                    }`}
+                  >
+                    {CATEGORY_LABELS[c.kategori_komoditas] || c.kategori_komoditas} ({formatRupiahShort(c.total_nilai)})
+                  </button>
+                ))}
             </div>
 
             {/* Controls right: Toggle Labels & Center */}
@@ -586,14 +596,19 @@ export const PetaSebaranView: React.FC = () => {
 
               {/* Dropdown selector for full 170 commodities */}
               <div className="flex items-center space-x-2">
-                <span className="text-xs text-earth-soil-muted font-medium">Pilihan Lengkap:</span>
+                <span className="text-xs text-earth-soil-muted font-medium">
+                  Pilihan Lengkap ({formatNumber(commodityOptions.length)}):
+                </span>
                 <select
                   value={selectedCommodity}
                   onChange={(e) => setSelectedCommodity(e.target.value)}
                   className="text-xs font-bold bg-earth-sand-surface border border-earth-sand-border py-1.5 px-3 focus:outline-none focus:border-earth-terracotta cursor-pointer text-earth-soil"
                 >
                   <option value="ALL">-- SEMUA KOMODITAS (Akumulasi) --</option>
-                  {(commodityData?.top_commodities || []).map((tc) => (
+                  {selectedCommodity !== 'ALL' && !commodityOptions.some((c) => c.komoditas === selectedCommodity) && (
+                    <option value={selectedCommodity}>{selectedCommodity}</option>
+                  )}
+                  {commodityOptions.map((tc) => (
                     <option key={tc.komoditas} value={tc.komoditas}>
                       {tc.komoditas} ({formatRupiahShort(tc.total_nilai)})
                     </option>
@@ -734,37 +749,34 @@ export const PetaSebaranView: React.FC = () => {
           <div className="p-4 bg-earth-sand-surface border-t border-earth-sand-border">
             {mapMode === 'komoditas' ? (
               <div>
-                <div className="text-xs font-bold text-earth-soil mb-2 flex items-center justify-between">
+                <div className="text-xs font-bold text-earth-soil mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <span>
-                    Legenda Sentra Produksi Komoditas ({selectedCommodity === 'ALL' ? 'Semua Komoditas' : selectedCommodity}):
+                    Legenda Nilai Transaksi Tercatat ({selectedCommodity === 'ALL' ? 'Semua Komoditas' : selectedCommodity}):
                   </span>
                   <span className="text-[11px] text-earth-soil-muted font-normal">
-                    Gradasi Terracotta (Semakin pekat = Sentra produksi utama)
+                    Skala logaritmik: tiap warna mewakili rentang nilai yang sebanding antar provinsi
                   </span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-[10px] font-mono">
+                  {commodityScale.max > 0 &&
+                    COMMODITY_COLORS.map((color, i) => {
+                      const lo = i === 0 ? commodityScale.min : commodityScale.breaks[i - 1];
+                      const hi = i === COMMODITY_COLORS.length - 1 ? commodityScale.max : commodityScale.breaks[i];
+                      // Jika semua provinsi bernilai sama, hanya satu kelas yang dipakai.
+                      if (commodityScale.breaks.length === 0 && i < COMMODITY_COLORS.length - 1) return null;
+                      return (
+                        <div key={color} className="flex items-center space-x-1.5">
+                          <span className="w-4 h-4 border border-stone-800 shrink-0" style={{ backgroundColor: color }}></span>
+                          <span>
+                            {commodityScale.breaks.length === 0
+                              ? formatRupiahShort(commodityScale.max)
+                              : `${formatRupiahShort(lo)} – ${formatRupiahShort(hi)}`}
+                          </span>
+                        </div>
+                      );
+                    })}
                   <div className="flex items-center space-x-1.5">
-                    <span className="w-4 h-4 bg-[#7C2D12] border border-stone-800 shrink-0"></span>
-                    <span>Sentra Utama (&gt; 50%)</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-4 h-4 bg-[#9A3412] border border-stone-800 shrink-0"></span>
-                    <span>Sentra Mayor (20-50%)</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-4 h-4 bg-[#C2410C] border border-stone-800 shrink-0"></span>
-                    <span>Produsen Aktif (8-20%)</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-4 h-4 bg-[#EA580C] border border-stone-800 shrink-0"></span>
-                    <span>Produsen Sedang (2-8%)</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-4 h-4 bg-[#FDBA74] border border-stone-600 shrink-0"></span>
-                    <span>Rintisan (&gt; 0%)</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-4 h-4 bg-[#E7E0D3] border border-stone-400 shrink-0"></span>
+                    <span className="w-4 h-4 border border-stone-400 shrink-0" style={{ backgroundColor: NO_DATA_COLOR }}></span>
                     <span>Belum Tercatat</span>
                   </div>
                 </div>
@@ -854,7 +866,8 @@ export const PetaSebaranView: React.FC = () => {
                     {commodityData?.summary.kategori || 'KATEGORI KOMODITAS'}
                   </span>
                   <span className="text-xs font-mono font-bold text-earth-forest">
-                    {commodityData?.summary.provinsi_count || 0} Provinsi Sentra
+                    {commodityData?.summary.provinsi_count || 0}
+                    {commodityData?.summary.provinsi_total ? ` dari ${commodityData.summary.provinsi_total}` : ''} Provinsi Tercatat
                   </span>
                 </div>
                 <h2 className="text-2xl font-extrabold text-earth-soil mt-1.5">
@@ -902,7 +915,7 @@ export const PetaSebaranView: React.FC = () => {
                     </span>
                     {selectedProvinceCommodity.rank > 0 && (
                       <span className="text-[10px] font-extrabold px-2 py-0.5 bg-amber-600 text-white font-mono">
-                        SENTRA #{selectedProvinceCommodity.rank}
+                        {selectedProvinceCommodity.rank <= SENTRA_TOP_N ? 'SENTRA' : 'PERINGKAT'} #{selectedProvinceCommodity.rank}
                       </span>
                     )}
                   </div>
@@ -911,7 +924,7 @@ export const PetaSebaranView: React.FC = () => {
                       {formatRupiah(selectedProvinceCommodity.total_nilai)}
                     </span>
                     <span className="text-xs font-mono font-bold text-amber-800">
-                      {selectedProvinceCommodity.percentage}% Pangsa Nasional
+                      {formatPercent(selectedProvinceCommodity.percentage)} Pangsa Nasional
                     </span>
                   </div>
                   <div className="text-[11px] text-amber-900 pt-1 border-t border-amber-200 flex justify-between">
@@ -924,7 +937,7 @@ export const PetaSebaranView: React.FC = () => {
               {/* Top 5 Producer Provinces List */}
               <div className="space-y-2">
                 <div className="text-xs font-bold text-earth-soil uppercase tracking-wider flex items-center justify-between">
-                  <span>Sentra Provinsi Terbesar:</span>
+                  <span>Provinsi dengan Nilai Terbesar:</span>
                   <span className="text-[10px] text-earth-soil-muted font-normal">
                     Peringkat 1 s.d. 5
                   </span>
@@ -950,7 +963,7 @@ export const PetaSebaranView: React.FC = () => {
                           <div>
                             <div className="text-xs text-earth-soil">{p.provinsi}</div>
                             <div className="text-[10px] text-earth-soil-muted">
-                              {p.transaksi_count} transaksi &bull; {p.percentage}% nasional
+                              {formatNumber(p.transaksi_count)} transaksi &bull; {formatPercent(p.percentage)} nasional
                             </div>
                           </div>
                         </div>

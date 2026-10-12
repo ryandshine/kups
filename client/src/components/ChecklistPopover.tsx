@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { formatRupiah } from '../utils/format';
 import { ReadinessCandidate } from '../types';
 import {
   X,
@@ -21,14 +22,6 @@ interface ChecklistPopoverProps {
   badgeType: ChecklistBadgeType;
   onClose: () => void;
   anchorRef: React.RefObject<HTMLSpanElement | null>;
-}
-
-function formatRupiah(val: number) {
-  if (!val) return 'Rp 0';
-  if (val >= 1e12) return `Rp ${(val / 1e12).toFixed(2)} T`;
-  if (val >= 1e9) return `Rp ${(val / 1e9).toFixed(2)} M`;
-  if (val >= 1e6) return `Rp ${(val / 1e6).toFixed(1)} Jt`;
-  return `Rp ${val.toLocaleString('id-ID')}`;
 }
 
 const BADGE_CONFIG: Record<ChecklistBadgeType, { label: string; icon: React.ReactNode; color: string }> = {

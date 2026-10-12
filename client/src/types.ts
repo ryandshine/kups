@@ -270,6 +270,8 @@ export interface CommodityDistributionResponse {
     total_nilai: number;
     transaksi_count: number;
     provinsi_count: number;
+    provinsi_total: number;
+    komoditas_total: number;
     lembaga_count: number;
   };
   provinces: CommodityProvinceStat[];

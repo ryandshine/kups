@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { formatNumber, formatRupiah, formatPercent } from '../utils/format';
 import { ProgresTierData, KupsTier, ReadinessResponse, ReadinessCandidate, ProvinceStat } from '../types';
 import { fetchProgresTier, fetchReadiness, fetchProvinces } from '../api';
 import { TierBadge } from '../components/TierBadge';
@@ -103,15 +104,6 @@ export const ProgresTierView: React.FC = () => {
     loadReadiness();
   };
 
-  const formatNumber = (n: number) => new Intl.NumberFormat('id-ID').format(n || 0);
-  const formatRupiah = (val: number) => {
-    if (!val) return 'Rp 0';
-    if (val >= 1_000_000_000_000) return `Rp ${(val / 1_000_000_000_000).toFixed(2)} T`;
-    if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(2)} M`;
-    if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(2)} Jt`;
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
-  };
-
   const filteredProvinces = useMemo(() => {
     if (!data?.provinces) return [];
     let list = data.provinces.filter((p) =>
@@ -200,7 +192,7 @@ export const ProgresTierView: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-blue-900">KELAS BIRU</span>
               <span className="text-xs font-mono font-bold text-blue-700">
-                {((summary.biru / summary.total_kups) * 100).toFixed(1)}%
+                {formatPercent((summary.biru / summary.total_kups) * 100)}
               </span>
             </div>
             <div className="text-xl sm:text-2xl font-extrabold font-mono text-blue-900 mt-1">
@@ -213,7 +205,7 @@ export const ProgresTierView: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-stone-900">KELAS PERAK</span>
               <span className="text-xs font-mono font-bold text-stone-700">
-                {((summary.perak / summary.total_kups) * 100).toFixed(1)}%
+                {formatPercent((summary.perak / summary.total_kups) * 100)}
               </span>
             </div>
             <div className="text-xl sm:text-2xl font-extrabold font-mono text-stone-900 mt-1">
@@ -226,7 +218,7 @@ export const ProgresTierView: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-amber-900">KELAS EMAS</span>
               <span className="text-xs font-mono font-bold text-amber-700">
-                {((summary.emas / summary.total_kups) * 100).toFixed(1)}%
+                {formatPercent((summary.emas / summary.total_kups) * 100)}
               </span>
             </div>
             <div className="text-xl sm:text-2xl font-extrabold font-mono text-amber-900 mt-1">
@@ -239,7 +231,7 @@ export const ProgresTierView: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-950">KELAS PLATINUM</span>
               <span className="text-xs font-mono font-bold text-emerald-700">
-                {((summary.platinum / summary.total_kups) * 100).toFixed(1)}%
+                {formatPercent((summary.platinum / summary.total_kups) * 100)}
               </span>
             </div>
             <div className="text-xl sm:text-2xl font-extrabold font-mono text-emerald-950 mt-1">
@@ -334,7 +326,7 @@ export const ProgresTierView: React.FC = () => {
               <div className="mt-4 pt-3 border-t border-earth-sand-border flex items-center justify-between text-xs text-earth-soil-muted">
                 <span>Total Populasi Biru: {formatNumber(pipelineStats?.biru_to_perak.total || 8562)}</span>
                 <span className="font-bold text-blue-800">
-                  {((pipelineStats?.biru_to_perak.sangat_siap || 504) / (pipelineStats?.biru_to_perak.total || 8562) * 100).toFixed(1)}% Siap
+                  {formatPercent((pipelineStats?.biru_to_perak.sangat_siap || 504) / (pipelineStats?.biru_to_perak.total || 8562) * 100)} Siap
                 </span>
               </div>
             </div>
@@ -372,7 +364,7 @@ export const ProgresTierView: React.FC = () => {
               <div className="mt-4 pt-3 border-t border-earth-sand-border flex items-center justify-between text-xs text-earth-soil-muted">
                 <span>Total Populasi Perak: {formatNumber(pipelineStats?.perak_to_emas.total || 6469)}</span>
                 <span className="font-bold text-amber-800">
-                  {((pipelineStats?.perak_to_emas.sangat_siap || 1047) / (pipelineStats?.perak_to_emas.total || 6469) * 100).toFixed(1)}% Siap
+                  {formatPercent((pipelineStats?.perak_to_emas.sangat_siap || 1047) / (pipelineStats?.perak_to_emas.total || 6469) * 100)} Siap
                 </span>
               </div>
             </div>
@@ -410,7 +402,7 @@ export const ProgresTierView: React.FC = () => {
               <div className="mt-4 pt-3 border-t border-earth-sand-border flex items-center justify-between text-xs text-earth-soil-muted">
                 <span>Total Populasi Emas: {formatNumber(pipelineStats?.emas_to_platinum.total || 1648)}</span>
                 <span className="font-bold text-emerald-800">
-                  {((pipelineStats?.emas_to_platinum.kandidat_audit || 555) / (pipelineStats?.emas_to_platinum.total || 1648) * 100).toFixed(1)}% Layak
+                  {formatPercent((pipelineStats?.emas_to_platinum.kandidat_audit || 555) / (pipelineStats?.emas_to_platinum.total || 1648) * 100)} Layak
                 </span>
               </div>
             </div>
