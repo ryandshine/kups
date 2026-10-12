@@ -3,9 +3,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const connectionString = 
-  process.env.DATABASE_URL || 
-  'postgresql://gealgeolgeo:GeoSecure2026R3set@gealgeolgeo-postgis:5432/sipekaps';
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL belum diatur. Set variabel lingkungan DATABASE_URL (lihat .env.example).');
+}
 
 export const pool = new Pool({
   connectionString,

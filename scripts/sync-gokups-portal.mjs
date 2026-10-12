@@ -10,7 +10,11 @@ const HEADERS = {
   'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
 };
 
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://gealgeolgeo:GeoSecure2026R3set@127.0.0.1:5434/sipekaps';
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.error('DATABASE_URL belum diatur (lihat .env.example).');
+  process.exit(1);
+}
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

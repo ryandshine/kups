@@ -13,6 +13,7 @@ import { leaderboardRouter } from './routes/leaderboard.js';
 import { commoditiesRouter } from './routes/commodities.js';
 import { exportRouter } from './routes/export.js';
 import { lembagaRouter } from './routes/lembaga.js';
+import { rateLimit } from './middleware/rateLimit.js';
 
 dotenv.config();
 
@@ -22,8 +23,15 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = parseInt(process.env.PORT || '3000', 10);
 
+// Di belakang Traefik: percayai 1 hop proxy agar req.ip adalah IP klien asli.
+app.set('trust proxy', parseInt(process.env.TRUST_PROXY || '1', 10));
+
 app.use(cors());
 app.use(express.json());
+
+// Pembatasan laju: umum untuk seluruh API, lebih ketat untuk unduhan CSV.
+app.use('/api', rateLimit({ windowMs: 60_000, max: 120, skip: ['/health'] }));
+app.use('/api/export', rateLimit({ windowMs: 60_000, max: 10 }));
 
 // API Routes
 app.use('/api/overview', overviewRouter);
